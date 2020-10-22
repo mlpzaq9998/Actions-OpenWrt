@@ -162,7 +162,7 @@ jobs:
     - name: Run After-Compile-OpenWRT Script
       run: |
         cd openwrt
-        ls openwrt/bin/targets/x86/64/
+        ls bin/targets/x86/64/
         source $GITHUB_WORKSPACE/$CUSTOM_SCRIPT && Diy_Core && Diy-Part3
 
     - name: Upload Firmware to Artifacts
