@@ -83,15 +83,11 @@ AutoBuild_Detail_EFI=AutoBuild-$TARGET_PROFILE1-Lede-${Openwrt_Version}-efi.deta
 Default_Firmware=openwrt-$TARGET_BOARD-$TARGET_SUBTARGET-$TARGET_PROFILE-squashfs-combined.img.gz
 AutoBuild_Firmware=AutoBuild-$TARGET_PROFILE1-Lede-${Openwrt_Version}.img.gz
 AutoBuild_Detail=AutoBuild-$TARGET_PROFILE1-Lede-${Openwrt_Version}.detail
-Default_Firmware_vmdk=openwrt-$TARGET_BOARD-$TARGET_SUBTARGET-$TARGET_PROFILE-squashfs-combined.vmdk
-AutoBuild_Firmware_vmdk=AutoBuild-$TARGET_PROFILE1-Lede-${Openwrt_Version}.vmdk
-AutoBuild_Detail_vmdk=AutoBuild-$TARGET_PROFILE1-Lede-${Openwrt_Version}-vmdk.detail
 mkdir -p ./bin/Firmware
 echo -n "$Openwrt_Version" > ./bin/Firmware/AutoBuild-$TARGET_PROFILE1-Lede-Version.txt
 echo "[$(date "+%H:%M:%S")] Moving $Default_Firmware to /bin/Firmware/$AutoBuild_Firmware ..."
 mv ./bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET/$Default_Firmware_EFI ./bin/Firmware/$AutoBuild_Firmware_EFI
 mv ./bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET/$Default_Firmware ./bin/Firmware/$AutoBuild_Firmware
-mv ./bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET/$Default_Firmware_vmdk ./bin/Firmware/$AutoBuild_Firmware_vmdk
 echo "[$(date "+%H:%M:%S")] Calculating MD5 and SHA256 ..."
 EFI_Firmware_MD5=`md5sum ./bin/Firmware/$AutoBuild_Firmware_EFI | cut -d ' ' -f1`
 EFI_Firmware_SHA256=`sha256sum ./bin/Firmware/$AutoBuild_Firmware_EFI | cut -d ' ' -f1`
@@ -101,8 +97,4 @@ Firmware_MD5=`md5sum ./bin/Firmware/$AutoBuild_Firmware | cut -d ' ' -f1`
 Firmware_SHA256=`sha256sum ./bin/Firmware/$AutoBuild_Firmware | cut -d ' ' -f1`
 echo "编译日期:$Compile_Time" > ./bin/Firmware/$AutoBuild_Detail
 echo -e "\nMD5:$Firmware_MD5\nSHA256:$Firmware_SHA256" >> ./bin/Firmware/$AutoBuild_Detail
-vmdk_Firmware_MD5=`md5sum ./bin/Firmware/$AutoBuild_Firmware_vmdk | cut -d ' ' -f1`
-vmdk_Firmware_SHA256=`sha256sum ./bin/Firmware/$AutoBuild_Firmware_vmdk | cut -d ' ' -f1`
-echo "编译日期:$Compile_Time" > ./bin/Firmware/$AutoBuild_Detail_vmdk
-echo -e "\nMD5:$vmdk_Firmware_MD5\nSHA256:$vmdk_Firmware_SHA256" >> ./bin/Firmware/$AutoBuild_Detail_vmdk
 }
