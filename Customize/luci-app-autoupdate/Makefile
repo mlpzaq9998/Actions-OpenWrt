@@ -5,8 +5,8 @@ include $(TOPDIR)/rules.mk
 LUCI_TITLE:=LuCI Support for Openwrt-AutoUpdate
 LUCI_DEPENDS:=+curl +wget
 LUCI_PKGARCH:=all
-PKG_VERSION:=6
-PKG_RELEASE:=20201009
+PKG_VERSION:=7
+PKG_RELEASE:=20201106
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

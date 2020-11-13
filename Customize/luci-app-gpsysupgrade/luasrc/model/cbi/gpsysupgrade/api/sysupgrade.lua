@@ -11,15 +11,10 @@ function get_system_version()
     return system_version
 end
 
-function get_system_model()
-	local system_model = luci.sys.exec("[ -f '/etc/os-release' ] && egrep ARCH /etc/os-release | awk -F '[\"]' '{printf $2}'")
-    return system_model
-end
-
-function to_check(model)
+function to_check()
     if not model or model == "" then model = api.auto_get_model() end
     
-    local download_url,remote_version,needs_update
+    local download_url,remote_version,needs_update,remoteformat,sysverformat,currentTimeStamp,dateyr
 	local version_file = "/tmp/version.txt"
 	if model == "x86_64" then
 		api.exec(api.wget, {api._unpack(api.wget_args), "-O", version_file, "https://github.com/mlpzaq9998/Actions-OpenWrt/releases/download/AutoUpdate/AutoBuild-x86_64-LEDE-Version.txt"}, nil, api.command_timeout)
@@ -54,7 +49,7 @@ function to_check(model)
         update = needs_update,
         now_version = get_system_version(),
         version = remote_version,
-        url = {download = download_url}
+        url = download_url
     }
 end
 
@@ -82,17 +77,17 @@ end
 
 function to_flash(file,retain)
     if not file or file == "" or not fs.access(file) then
-		api.exec("/bin/rm", {"-f", tmp_file})
+		api.exec("/bin/rm", {"-f", file})
         return {code = 1, error = i18n.translate("Firmware file is required.")}
     end
 if not retain or retain == "" then
-	local result = api.exec("/sbin/sysupgrade", {file}, nil, api.command_timeout) == 0
+	local result = sys.call("/sbin/sysupgrade " ..file) == 0
 else
-	local result = api.exec("/sbin/sysupgrade", {retain, file}, nil, api.command_timeout) == 0
+	local result = sys.call("/sbin/sysupgrade " ..retain.. " " ..file) == 0
 end
 
     if not result or not fs.access(file) then
-        api.exec("/bin/rm", {"-f", tmp_file})
+        api.exec("/bin/rm", {"-f", file})
         return {
             code = 1,
             error = i18n.translatef("System upgrade failed")

@@ -33,7 +33,6 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 
 	window.onload = function() {
 		var sysupCheckBtn = document.getElementById('_sysup-check_btn');
-		var sysupDetailElm = document.getElementById('_sysup-check_btn-detail');
 		checkUpdate_sysup(sysupCheckBtn)
 	};
 
@@ -45,7 +44,7 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 	}
 
 	function removePageNotice_sysup() {
-		window.onbeforeunload = undefined;
+		window.onbeforeunload = null;
 	}
 
 	function onUpdateSuccess_sysup(btn) {
@@ -86,6 +85,7 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 		addPageNotice_sysup();
 
 		var ckeckDetailElm = document.getElementById(btn.id + '-detail');
+		var updateLogs = document.getElementById('updatelogs');
 
 		XHR.get('<%=url([[admin]], [[system]], [[gpsysupgrade]], [[sysversion_check]])%>', {
 			token: tokenStr,
@@ -110,6 +110,8 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 							urlNode = '<em style="color:red;">' + json.version + '</em>';
 						}
 					ckeckDetailElm.innerHTML = urlNode;
+					updateLogs.innerHTML = logs;
+					
 					}
 				} else {
 					sysUpgradeInfo = json;
@@ -131,7 +133,7 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 		// Download file
 		XHR.get(sysUpgradeUrl, {
 			token: tokenStr,
-			url: sysUpgradeInfo ? sysUpgradeInfo.url.download : ''
+			url: sysUpgradeInfo ? sysUpgradeInfo.url : ''
 		}, function(x,json) {
 			if(json.code) {
 				removePageNotice_sysup();
@@ -139,8 +141,8 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 			} else {
 						btn.value = flashing;
 						message.style.display = '';
-							label.innerHTML = '<%:Waiting for device...%>';
-							check();
+							label.innerHTML = '<%:Upgrade successful, Waiting for device...%>';
+							
 			var opts = "";
 		if (!kconfig.checked){
 			opts = "-n";
@@ -159,11 +161,7 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 							retain: opts
 						}, function(x,json) {
 							removePageNotice_sysup();
-							if(json.code) {
-								onRequestError_sysup(btn, json.error);
-							} else {
-								onUpdateSuccess_sysup(btn);
-							}
+							check();
 						},300)
 			}
 		},300)
@@ -213,12 +211,12 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 	</h2>
 	
 <h3>	
-<div id="retain" style="display:none;margin-left:0.5rem">
-	<p><label class="btn"><input type="checkbox" checked id="kconfig"> <%:Keep settings and retain the current configuration%></label></p>
-<p><label class="btn"><input type="checkbox" checked id="kopkg"> <%:Retain the current packages%></label></p>
+<div id="retain" style="display:none;margin:0.5rem;">
+	<p style="margin-top:0.4rem;"><button class="btn"><input type="checkbox" checked id="kconfig"> <%:Keep settings and retain the current configuration%></button></p>
+<p style="margin-top:0.5rem;"><button class="btn"><input type="checkbox" checked id="kopkg"> <%:Retain the current packages%></button></p>
 </div>
 </h3>
-						<input class="cbi-button cbi-input-apply cbi-button-reset" type="button" id="_sysup-check_btn" onclick="onBtnClick_sysup(this);" value="<%:Check update%>"/>
+						<input class="cbi-button cbi-input-apply cbi-button-reset" type="button" id="_sysup-check_btn" onclick="onBtnClick_sysup(this);" value="<%:Check update%>" style="margin-top:0.5rem;"/>
 			
 </div>
 </h1>
@@ -236,7 +234,6 @@ local system_version = require "luci.model.cbi.gpsysupgrade.api.sysupgrade".get_
 	var label = message.querySelector('span');
 
 	function ok() {
-		window.onbeforeunload = null;
 		window.location = '<%=url("admin")%>';
 	}
 

@@ -16,6 +16,7 @@ TARGET_PROFILE=`egrep -o "CONFIG_TARGET_.[0-9]+.[0-9]+=y" .config | sed -r 's/.*
 }
 
 GET_TARGET_INFO() {
+Diy_Core
 TARGET_BOARD=`awk -F'[="]+' '/TARGET_BOARD/{print $2}' .config`
 TARGET_SUBTARGET=`awk -F'[="]+' '/TARGET_SUBTARGET/{print $2}' .config`
 }
@@ -30,7 +31,6 @@ sed -i 's/OpenWrt-Life/OpenWrt/g' package/base-files/files/etc/config/system
 }
 
 Diy-Part2() {
-Diy_Core
 GET_TARGET_INFO
 git clone https://github.com/garypang13/luci-theme-edge.git ./package/luci-theme-edge
 git clone https://github.com/garypang13/luci-app-eqos.git ./package/feeds/packages/luci-app-eqos
@@ -69,7 +69,6 @@ sed -i "s?Openwrt?Openwrt $Openwrt_Version / AutoUpdate $AutoUpdate_Version?g" .
 }
 
 Diy-Part3() {
-Diy_Core
 GET_TARGET_INFO
 Default_Firmware_EFI=openwrt-$TARGET_BOARD-$TARGET_SUBTARGET-combined-squashfs-efi.img.gz
 AutoBuild_Firmware_EFI=AutoBuild-$TARGET_PROFILE-OpenWrt-${Openwrt_Version}-efi.img.gz
@@ -78,17 +77,17 @@ Default_Firmware=openwrt-$TARGET_BOARD-$TARGET_SUBTARGET-combined-squashfs.img.g
 AutoBuild_Firmware=AutoBuild-$TARGET_PROFILE-OpenWrt-${Openwrt_Version}.img.gz
 AutoBuild_Detail=AutoBuild-$TARGET_PROFILE-OpenWrt-${Openwrt_Version}.detail
 mkdir -p ./bin/Firmware
-echo -n "$Openwrt_Version" > ./bin/Firmware/AutoBuild-$TARGET_PROFILE-OpenWrt-Life-Version.txt
-echo "[$(date "+%H:%M:%S")] Moving $Default_Firmware to /bin/Firmware/$AutoBuild_Firmware ..."
+echo "Firmware: $AutoBuild_Firmware"
+echo "Firmware: $AutoBuild_Firmware_EFI"
 mv ./bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET/$Default_Firmware_EFI ./bin/Firmware/$AutoBuild_Firmware_EFI
 mv ./bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET/$Default_Firmware ./bin/Firmware/$AutoBuild_Firmware
 echo "[$(date "+%H:%M:%S")] Calculating MD5 and SHA256 ..."
 EFI_Firmware_MD5=`md5sum ./bin/Firmware/$AutoBuild_Firmware_EFI | cut -d ' ' -f1`
 EFI_Firmware_SHA256=`sha256sum ./bin/Firmware/$AutoBuild_Firmware_EFI | cut -d ' ' -f1`
-echo "编译日期:$Compile_Time" > ./bin/Firmware/$AutoBuild_Detail_EFI
-echo -e "\nMD5:$EFI_Firmware_MD5\nSHA256:$EFI_Firmware_SHA256" >> ./bin/Firmware/$AutoBuild_Detail_EFI
 Firmware_MD5=`md5sum ./bin/Firmware/$AutoBuild_Firmware | cut -d ' ' -f1`
 Firmware_SHA256=`sha256sum ./bin/Firmware/$AutoBuild_Firmware | cut -d ' ' -f1`
+echo -e "MD5: $Firmware_MD5\nSHA256: $Firmware_SHA256"
+echo -e "MD5: $EFI_Firmware_MD5\nSHA256: $EFI_Firmware_SHA256"
 echo "编译日期:$Compile_Time" > ./bin/Firmware/$AutoBuild_Detail
 echo -e "\nMD5:$Firmware_MD5\nSHA256:$Firmware_SHA256" >> ./bin/Firmware/$AutoBuild_Detail
 }
