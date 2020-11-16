@@ -4,6 +4,9 @@ Copyright 2019 lisaac <https://github.com/lisaac/luci-app-dockerman>
 ]]--
 
 local docker = require "luci.model.docker"
+local net = require "luci.model.network".init()
+local sys = require "luci.sys"
+local ifaces = sys.net:devices()
 
 local m, s, o
 
@@ -146,7 +149,8 @@ if nixio.fs.access("/usr/bin/dockerd") then
 
 	o = s:option(DynamicList, "registry_mirrors",
 		translate("Registry Mirrors"))
-	o:value("https://hub-mirror.c.163.com", "https://hub-mirror.c.163.com")
+	o:value("https://hub-mirror.c.163.com", translate("NetEase"))
+	o:value("https://ustc-edu-cn.mirror.aliyuncs.com", translate("USTC"))
 	o:depends("remote_endpoint", 0)
 
 	o = s:option(ListValue, "log_level",
@@ -164,6 +168,26 @@ if nixio.fs.access("/usr/bin/dockerd") then
 		translate('Specifies where the Docker daemon will listen for client connections'))
 	o:value("unix:///var/run/docker.sock", "unix:///var/run/docker.sock")
 	o:value("tcp://0.0.0.0:2375", "tcp://0.0.0.0:2375")
+	o.rmempty = true
+	o:depends("remote_endpoint", 0)
+
+s = m:section(NamedSection, "firewall", "section")
+
+	o = s:option(DynamicList, "blocked_interfaces",
+		translate("Blocked interfaces"),
+		translate('Prevent the external network from directly connecting to Docker host.'))
+	o:value("wan")
+	for _, iface in ipairs(ifaces) do
+	if not (iface == "lo" or iface:match("^ifb.*")) then
+		local nets = net:get_interface(iface)
+		nets = nets and nets:get_networks() or {}
+		for k, v in pairs(nets) do
+			nets[k] = nets[k].sid
+		end
+		nets = table.concat(nets, ",")
+		o:value(iface, ((#nets > 0) and "%s (%s)" % {iface, nets} or iface))
+	end
+end
 	o.rmempty = true
 	o:depends("remote_endpoint", 0)
 end
