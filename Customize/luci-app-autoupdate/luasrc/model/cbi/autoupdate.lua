@@ -44,7 +44,7 @@ button_upgrade_firmware = s:option (Button, "_button_upgrade_firmware", translat
 translatef("点击 执行升级 后请耐心等待至路由器重启.") .. "<br><br>设备名称:" ..current_model .. "<br>当前固件版本: " .. current_version .. "<br>云端固件版本: " .. cloud_version)
 button_upgrade_firmware.inputtitle = translate ("Do Upgrade")
 button_upgrade_firmware.write = function()
-	luci.sys.call ("bash /bin/AutoUpdate.sh > /dev/null")
+	luci.sys.call ("sh /bin/AutoUpdate.sh > /dev/null")
 end
 
 local e=luci.http.formvalue("cbi.apply")
