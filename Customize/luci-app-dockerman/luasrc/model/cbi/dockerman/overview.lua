@@ -147,6 +147,12 @@ if nixio.fs.access("/usr/bin/dockerd") then
 	o.datatype = "ipaddr"
 	o:depends("remote_endpoint", 0)
 
+	o = s:option(Flag, "iptables",
+		translate("Enable iptables"),
+		translate("Allow Docker to create iptables rules"))
+	o.rmempty = false
+	o:depends("remote_endpoint", 0)
+
 	o = s:option(DynamicList, "registry_mirrors",
 		translate("Registry Mirrors"))
 	o:value("https://hub-mirror.c.163.com", translate("NetEase"))
@@ -173,6 +179,13 @@ if nixio.fs.access("/usr/bin/dockerd") then
 
 s = m:section(NamedSection, "firewall", "section")
 
+	o = s:option(Value, "device",
+		translate("Docker bridge name"))
+	o.placeholder = "docker0"
+	o.default = "docker0"
+	o.rmempty = false
+	o:depends("remote_endpoint", 0)
+
 	o = s:option(DynamicList, "blocked_interfaces",
 		translate("Blocked interfaces"),
 		translate('Prevent the external network from directly connecting to Docker host.'))
@@ -188,6 +201,12 @@ s = m:section(NamedSection, "firewall", "section")
 		o:value(iface, ((#nets > 0) and "%s (%s)" % {iface, nets} or iface))
 	end
 end
+	o.rmempty = true
+	o:depends("remote_endpoint", 0)
+
+	o = s:option(Value, "extra_iptables_args",
+		translate("Additional iptables parameters"))
+	o.placeholder = "--match conntrack ! --ctstate RELATED,ESTABLISHED"
 	o.rmempty = true
 	o:depends("remote_endpoint", 0)
 end

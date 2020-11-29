@@ -10,6 +10,18 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Weblate 4.3.2-dev\n"
 
+msgid "Additional iptables parameters"
+msgstr "附加 iptables 参数"
+
+msgid "Enable iptables"
+msgstr "启用 iptables"
+
+msgid "Allow Docker to create iptables rules"
+msgstr "允许 Docker 创建 iptables 规则"
+
+msgid "Docker bridge name"
+msgstr "Docker 网桥名称"
+
 msgid "NetEase"
 msgstr "网易"
 
