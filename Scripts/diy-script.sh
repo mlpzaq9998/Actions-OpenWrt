@@ -41,7 +41,6 @@ GET_TARGET_INFO
 sed -i 's/bootstrap/argon/g' ./feeds/luci/modules/luci-base/root/etc/config/luci
 rm -rf ./package/lean/luci-theme-argon
 rm -rf ./package/lean/luci-app-wrtbwmon
-git clone https://github.com/jerrykuku/luci-app-jd-dailybonus.git ./package/lean/luci-app-jd-dailybonus
 git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git ./package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-app-argon-config.git ./package/lean/luci-app-argon-config
 git clone -b 18.06 https://github.com/garypang13/luci-theme-edge.git ./package/lean/luci-theme-edge
