@@ -21,7 +21,7 @@ on:
 #    - cron: 0 11 * * *
 
   watch:
-    types: [started]
+    types: started
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
