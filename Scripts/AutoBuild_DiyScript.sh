@@ -53,10 +53,11 @@ Diy-Part1() {
 	ExtraPackages svn other luci-app-socat https://github.com/Lienol/openwrt-package/trunk
 	ExtraPackages svn other luci-app-usb3disable https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw
 	ExtraPackages git other luci-app-eqos https://github.com/garypang13 master
-	mv Customize/luci-app-wrtbwmon package/lean/
-	mv Customize/wrtbwmon package/lean/
-	mv Customize/luci-app-koolproxyR package/lean/
-	mv Customize/koolproxy package/lean/
+	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-dockerman ./package/lean/luci-app-dockerman
+	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
+	cp -r -f $GITHUB_WORKSPACE/Customize/wrtbwmon ./package/lean/wrtbwmon
+	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-koolproxyR ./package/lean/luci-app-koolproxyR
+	cp -r -f $GITHUB_WORKSPACE/Customize/koolproxy ./package/lean/koolproxy
 	mv package/lean/luci-app-eqos/po/zh_Hans package/lean/luci-app-eqos/po/zh-cn
 	echo CONFIG_BINFMT_MISC=y >> target/linux/x86/config-5.4
 
