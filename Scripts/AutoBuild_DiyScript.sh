@@ -65,8 +65,8 @@ Diy-Part1() {
 Diy-Part2() {
 	Diy_Part2_Base
 	# Modify default IP
-	sed -i 's/192.168.1.1/192.168.3.1/g' ./package/base-files/files/bin/config_generate
-	sed -i 's/bootstrap/argon/g' ./feeds/luci/modules/luci-base/root/etc/config/luci
+	sed -i 's/192.168.1.1/192.168.3.1/g' package/base-files/files/bin/config_generate
+	sed -i 's/bootstrap/argon/g' feeds/luci/modules/luci-base/root/etc/config/luci
 
 	# ExtraPackages svn feeds/packages mwan3 https://github.com/openwrt/packages/trunk/net
 }
