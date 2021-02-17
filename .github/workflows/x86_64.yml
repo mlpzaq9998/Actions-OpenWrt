@@ -10,6 +10,8 @@ name: AutoBuild-x86_64
 
 on:
   repository_dispatch:
+  release:
+    types: published
   workflow_dispatch:
     inputs:
       ssh:
