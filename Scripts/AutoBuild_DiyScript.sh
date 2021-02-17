@@ -41,8 +41,7 @@ Diy-Part1() {
 	# ExtraPackages svn network/services ppp https://github.com/openwrt/openwrt/trunk/package/network/services
 	# ExtraPackages svn network/services hostapd https://github.com/openwrt/openwrt/trunk/package/network/services
 	# ExtraPackages svn kernel mt76 https://github.com/openwrt/openwrt/trunk/package/kernel
-
-	sed -i 's/bootstrap/argon/g' ./feeds/luci/modules/luci-base/root/etc/config/luci
+	
 	rm -rf ./package/lean/luci-theme-argon
 	rm -rf ./package/lean/luci-app-wrtbwmon
 	ExtraPackages git lean luci-theme-argon https://github.com/jerrykuku 18.06
@@ -60,12 +59,14 @@ Diy-Part1() {
 	cp -r -f $GITHUB_WORKSPACE/Customize/koolproxy ./package/lean/koolproxy
 	mv ./package/lean/luci-app-eqos/po/zh_Hans ./package/lean/luci-app-eqos/po/zh-cn
 	echo CONFIG_BINFMT_MISC=y >> ./target/linux/x86/config-5.4
-	# Modify default IP
-	sed -i 's/192.168.1.1/192.168.3.1/g' ./package/base-files/files/bin/config_generate
+
 }
 
 Diy-Part2() {
 	Diy_Part2_Base
+	# Modify default IP
+	sed -i 's/192.168.1.1/192.168.3.1/g' ./package/base-files/files/bin/config_generate
+	sed -i 's/bootstrap/argon/g' ./feeds/luci/modules/luci-base/root/etc/config/luci
 
 	# ExtraPackages svn feeds/packages mwan3 https://github.com/openwrt/packages/trunk/net
 }
