@@ -80,7 +80,13 @@ function get_containers()
 				data[index]["_image"] = iv.RepoTags and iv.RepoTags[1] or (iv.RepoDigests[1]:gsub("(.-)@.+", "%1") .. ":<none>")
 			end
 		end
-
+		if type(v.Mounts) == "table" and next(v.Mounts) then
+			for _, v2 in pairs(v.Mounts) do
+				if v2.Type ~= "volume" then
+					data[index]["_mounts"] = (data[index]["_mounts"] and (data[index]["_mounts"] .. "<br>") or "") .. v2.Source .. "￫" .. v2.Destination
+				end
+			end
+		end
 		data[index]["_image_id"] = v.ImageID:sub(8,20)
 		data[index]["_command"] = v.Command
 	end
@@ -134,8 +140,12 @@ o = s:option(DummyValue, "_ports", translate("Ports"))
 o.width="10%"
 o.rawhtml = true
 
+o = s:option(DummyValue, "_mounts", translate("Mount Point"))
+o.width="15%"
+o.rawhtml = true
+
 o = s:option(DummyValue, "_image", translate("Image"))
-o.width="10%"
+o.width="8%"
 
 o = s:option(DummyValue, "_command", translate("Command"))
 o.width="20%"

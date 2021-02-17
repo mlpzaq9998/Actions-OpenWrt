@@ -44,13 +44,12 @@ rm -rf ./package/lean/luci-app-wrtbwmon
 git clone https://github.com/jerrykuku/luci-app-jd-dailybonus.git ./package/lean/luci-app-jd-dailybonus
 git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git ./package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-app-argon-config.git ./package/lean/luci-app-argon-config
-git clone -b 18.06 https://github.com/garypang13/luci-theme-edge.git ./package/lean/luci-theme-edge
+# git clone -b 18.06 https://github.com/garypang13/luci-theme-edge.git ./package/lean/luci-theme-edge
 git clone https://github.com/garypang13/luci-app-eqos.git ./package/lean/luci-app-eqos
 # git clone https://github.com/Hyy2001X/luci-app-autoupdate.git ./package/lean/luci-app-autoupdate
 cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-autoupdate ./package/lean/luci-app-autoupdate
 cp -f $GITHUB_WORKSPACE/Customize/AutoUpdate.sh ./package/base-files/files/bin/AutoUpdate.sh
 cp -f $GITHUB_WORKSPACE/Customize/banner ./package/base-files/files/etc
-cp -r -f $GITHUB_WORKSPACE/Customize/open-vm-tools ./package/lean/open-vm-tools
 cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-dockerman ./package/lean/luci-app-dockerman
 cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
 cp -r -f $GITHUB_WORKSPACE/Customize/wrtbwmon ./package/lean/wrtbwmon
