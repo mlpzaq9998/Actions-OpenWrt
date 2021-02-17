@@ -10,8 +10,6 @@ name: AutoBuild-x86_64
 
 on:
   repository_dispatch:
-  release:
-    types: published
   workflow_dispatch:
     inputs:
       ssh:
@@ -23,7 +21,7 @@ on:
 #    - cron: 0 11 * * *
 
   watch:
-    types: started
+    types: [started]
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
@@ -84,8 +82,6 @@ jobs:
         ln -s /mnt/openwrt/dl openwrt/dl
         ln -s /mnt/openwrt/feeds openwrt/feeds
         ln -s /mnt/openwrt/staging_dir openwrt/staging_dir
-        
-        df -hT
         
     - name: Run Diy-Part1 Scripts
       run: |
