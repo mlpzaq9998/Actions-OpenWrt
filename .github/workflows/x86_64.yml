@@ -86,7 +86,7 @@ jobs:
         ln -s /mnt/openwrt/staging_dir openwrt/staging_dir
         
         df -hT
-	
+        
     - name: Run Diy-Part1 Scripts
       run: |
         chmod +x $DIY_SCRIPT
