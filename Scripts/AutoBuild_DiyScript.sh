@@ -13,9 +13,9 @@ Diy_Core() {
 	INCLUDE_mt7621_OC1000MHz=true
 	INCLUDE_Enable_FirewallPort_53=true
 
-	INCLUDE_SSR_Plus=true
-	INCLUDE_Passwall=true
-	INCLUDE_HelloWorld=false
+	INCLUDE_SSR_Plus=false
+	INCLUDE_Passwall=false
+	INCLUDE_HelloWorld=true
 	INCLUDE_Bypass=false
 	INCLUDE_OpenClash=false
 }
@@ -52,7 +52,7 @@ Diy-Part1() {
 	ExtraPackages git other luci-app-serverchan https://github.com/tty228 master
 	ExtraPackages svn other luci-app-socat https://github.com/Lienol/openwrt-package/trunk
 	ExtraPackages svn other luci-app-usb3disable https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw
-	ExtraPackages git other luci-app-eqos https://github.com/garypang13 master
+	ExtraPackages git lean luci-app-eqos https://github.com/garypang13 master
 	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-dockerman ./package/lean/luci-app-dockerman
 	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
 	cp -r -f $GITHUB_WORKSPACE/Customize/wrtbwmon ./package/lean/wrtbwmon
