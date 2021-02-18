@@ -60,6 +60,9 @@ Diy-Part1() {
 	cp -r -f $GITHUB_WORKSPACE/Customize/koolproxy ./package/lean/koolproxy
 	mv package/lean/luci-app-eqos/po/zh_Hans package/lean/luci-app-eqos/po/zh-cn
 	echo CONFIG_BINFMT_MISC=y >> target/linux/x86/config-5.4
+	chmod -R 755 ./package/lean/luci-app-koolproxyR
+	chmod -R 755 ./package/lean/koolproxy
+	chmod -R 755 ./package/lean/luci-app-dockerman
 
 }
 
