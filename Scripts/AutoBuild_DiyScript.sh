@@ -72,7 +72,7 @@ Diy-Part2() {
 	sed -i 's/192.168.1.1/192.168.3.1/g' package/base-files/files/bin/config_generate
 	sed -i 's/bootstrap/argon/g' feeds/luci/modules/luci-base/root/etc/config/luci
 
-	# ExtraPackages svn feeds/packages mwan3 https://github.com/openwrt/packages/trunk/net
+	Replace_File Customize/mwan3.config package/feeds/packages/mwan3/files/etc/config mwan3
 }
 
 Diy-Part3() {
