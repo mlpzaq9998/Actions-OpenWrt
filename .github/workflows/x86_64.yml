@@ -82,7 +82,6 @@ jobs:
         ln -s /mnt/openwrt/dl openwrt/dl
         ln -s /mnt/openwrt/feeds openwrt/feeds
         ln -s /mnt/openwrt/staging_dir openwrt/staging_dir
-	
         df -h
         
     - name: Run Diy-Part1 Scripts
