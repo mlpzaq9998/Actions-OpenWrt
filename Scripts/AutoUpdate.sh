@@ -9,26 +9,36 @@ TIME() {
 	echo -ne "\n[$(date "+%H:%M:%S")] "
 }
 
+opkg list | awk '{print $1}' > /tmp/Package_list
 Input_Option="$1"
 Input_Other="$2"
 CURRENT_Version="$(awk 'NR==1' /etc/openwrt_info)"
 Github="$(awk 'NR==2' /etc/openwrt_info)"
 DEFAULT_Device="$(awk 'NR==3' /etc/openwrt_info)"
+Firmware_Type="$(awk 'NR==4' /etc/openwrt_info)"
 case ${DEFAULT_Device} in
 x86_64)
+	[[ -z ${Firmware_Type} ]] && Firmware_Type="img"
+	if [[ "${Firmware_Type}" == "img.gz" ]];then
+		Compressed_x86="1"
+	else
+		Compressed_x86="0"
+	fi
 	if [ -d /sys/firmware/efi ];then
 		EFI_Boot="1"
-		Firmware_SFX="-efi.img"
-		Firmware_Detail="-efi.detail"
+		BOOT_Type="-UEFI"
 	else
 		EFI_Boot="0"
-		Firmware_SFX=".img"
-		Firmware_Detail=".detail"
+		BOOT_Type="-Legacy"
 	fi
+	Firmware_SFX="${BOOT_Type}.${Firmware_Type}"
+	Firmware_Detail="${BOOT_Type}.detail"
 	CURRENT_Device="x86_64"
+;;
 *)
 	CURRENT_Device="$(jsonfilter -e '@.model.id' < /etc/board.json | tr ',' '_')"
-	Firmware_SFX=".bin"
+	Firmware_SFX=".${Firmware_Type}"
+	[[ -z ${Firmware_SFX} ]] && Firmware_SFX="bin"
 	Firmware_Detail=".detail"
 esac
 Github_Download="${Github}/releases/download/AutoUpdate"
@@ -127,6 +137,7 @@ else
 		echo "作者/仓库:	${Author}"
 		if [[ ${DEFAULT_Device} == "x86_64" ]];then
 			echo "EFI 引导: 	${EFI_Boot}"
+			echo "gz 压缩:	${Compressed_x86}"
 		fi
 		echo "固件格式:	${Firmware_SFX}"
 		exit
@@ -151,7 +162,6 @@ else
 		Upgrade_Options="${Input_Option}"
 	fi
 fi
-opkg list | awk '{print $1}' > /tmp/Package_list
 if [[ ! "${Force_Update}" == "1" ]] && [[ ! "${AutoUpdate_Mode}" == "1" ]];then
 	grep "curl" /tmp/Package_list > /dev/null 2>&1
 	if [[ ! $? -ne 0 ]];then
@@ -201,6 +211,7 @@ if [[ -z "${GET_FullVersion}" ]] || [[ -z "${GET_Version}" ]];then
 fi
 echo -e "\n固件作者: ${Author%/*}"
 echo "设备名称: ${DEFAULT_Device}"
+echo "固件格式: ${Firmware_SFX}"
 echo -e "\n当前固件版本: ${CURRENT_Version}"
 echo "云端固件版本: ${GET_Version}"
 Check_Stable_Version=$(echo ${GET_Version} | egrep -o "R[0-9]+.[0-9]+.[0-9]+.[0-9]+")
@@ -225,7 +236,7 @@ echo "固件下载地址: ${Github_Download}"
 cd ${Download_Path}/Downloads
 echo "固件保存位置: ${Download_Path}/Downloads"
 TIME && echo "正在下载固件,请耐心等待..."
-wget -q "${Github_Download}/${Firmware}" -O ${Firmware}
+wget "${Github_Download}/${Firmware}" -O ${Firmware}
 if [[ ! "$?" == 0 ]];then
 	TIME && echo "固件下载失败,请检查网络后重试!"
 	exit
@@ -242,15 +253,48 @@ CURRENT_MD5=$(md5sum ${Firmware} | cut -d ' ' -f1)
 echo -e "\n本地固件MD5:${CURRENT_MD5}"
 echo "云端固件MD5:${GET_MD5}"
 if [[ -z "${GET_MD5}" ]] || [[ -z "${CURRENT_MD5}" ]];then
-	echo -e "\nMD5 获取失败!"
+	TIME && echo -e "MD5 获取失败!"
 	exit
 fi
 if [[ ! "${GET_MD5}" == "${CURRENT_MD5}" ]];then
-	echo -e "\nMD5 对比失败,请检查网络后重试!"
+	TIME && echo -e "MD5 对比失败,请检查网络后重试!"
 	exit
 else
 	TIME && echo -e "MD5 对比通过!"
 fi
+if [[ ${Compressed_x86} == "1" ]];then
+	TIME && echo "检测到固件为 [.gz] 压缩格式,开始解压固件..."
+	grep "gzip" /tmp/Package_list > /dev/null 2>&1
+	if [[ $? -ne 0 ]];then
+		if [[ "${Force_Update}" == "1" ]] || [[ "${AutoUpdate_Mode}" == "1" ]];then
+			Choose="Y"
+		else
+			TIME && read -p "未安装[gzip],是否执行安装?[Y/n]:" Choose
+		fi
+		if [[ "${Choose}" == Y ]] || [[ "${Choose}" == y ]];then
+			TIME && echo -e "开始安装[gzip],请耐心等待...\n"
+			opkg update > /dev/null 2>&1
+			opkg install gzip
+		else
+			TIME && echo "用户已取消安装,即将退出更新脚本..."
+			sleep 2
+			exit
+		fi
+	fi
+	Firmware="${Firmware_Info}${BOOT_Type}.img"
+	rm -f ${Firmware} > /dev/null 2>&1
+	gzip -dk ${Firmware} > /dev/null 2>&1
+	if [ -f "${Firmware}" ];then
+		TIME && echo "固件解压成功,固件名称: ${Firmware}"
+	else
+		TIME && echo "固件解压失败,请检查相关信息!"
+		exit
+	fi
+fi
 TIME && echo -e "开始更新固件,请耐心等待路由器重启...\n"
-sleep 3
+sleep 30
 sysupgrade ${Upgrade_Options} ${Firmware}
+if [[ $? -ne 0 ]];then
+	TIME && echo "固件刷写失败,请尝试不保留配置[-n]更新!"
+	exit
+fi
