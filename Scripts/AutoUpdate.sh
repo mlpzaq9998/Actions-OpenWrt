@@ -9,6 +9,33 @@ TIME() {
 	echo -ne "\n[$(date "+%H:%M:%S")] "
 }
 
+Install_Pkg() {
+	PKG_NAME=${1}
+	grep "${PKG_NAME}" /tmp/Package_list > /dev/null 2>&1
+	if [[ $? -ne 0 ]];then
+		if [[ "${Force_Update}" == "1" ]] || [[ "${AutoUpdate_Mode}" == "1" ]];then
+			Choose="Y"
+		else
+			TIME && read -p "未安装[${PKG_NAME}],是否执行安装?[Y/n]:" Choose
+		fi
+		if [[ "${Choose}" == Y ]] || [[ "${Choose}" == y ]];then
+			TIME && echo -e "开始安装[${PKG_NAME}],请耐心等待...\n"
+			opkg update > /dev/null 2>&1
+			opkg install ${PKG_NAME}
+			if [[ $? -ne 0 ]];then
+				TIME && echo "[${PKG_NAME}] 安装失败,请尝试手动安装!"
+				exit
+			else
+				TIME && echo "[${PKG_NAME}] 安装成功!"
+			fi
+		else
+			TIME && echo "用户已取消安装,即将退出更新脚本..."
+			sleep 2
+			exit
+		fi
+	fi
+}
+
 opkg list | awk '{print $1}' > /tmp/Package_list
 Input_Option="$1"
 Input_Other="$2"
@@ -38,7 +65,7 @@ x86_64)
 *)
 	CURRENT_Device="$(jsonfilter -e '@.model.id' < /etc/board.json | tr ',' '_')"
 	Firmware_SFX=".${Firmware_Type}"
-	[[ -z ${Firmware_SFX} ]] && Firmware_SFX="bin"
+	[[ -z ${Firmware_SFX} ]] && Firmware_SFX=".bin"
 	Firmware_Detail=".detail"
 esac
 Github_Download="${Github}/releases/download/AutoUpdate"
@@ -76,7 +103,6 @@ else
 	Download_Path="/tmp"
 fi
 [ ! -d "${Download_Path}/Downloads" ] && mkdir -p ${Download_Path}/Downloads
-
 cd /etc
 clear && echo "Openwrt-AutoUpdate Script ${Version}"
 if [[ -z "${Input_Option}" ]];then
@@ -169,23 +195,7 @@ if [[ ! "${Force_Update}" == "1" ]] && [[ ! "${AutoUpdate_Mode}" == "1" ]];then
 		[ ! "$Google_Check" == 200 ] && TIME && echo "Google 连接失败,可能导致固件下载速度缓慢!"
 	fi
 fi
-grep "wget" /tmp/Package_list > /dev/null 2>&1
-if [[ $? -ne 0 ]];then
-	if [[ "${Force_Update}" == "1" ]] || [[ "${AutoUpdate_Mode}" == "1" ]];then
-		Choose="Y"
-	else
-		TIME && read -p "未安装[wget],是否执行安装?[Y/n]:" Choose
-	fi
-	if [[ "${Choose}" == Y ]] || [[ "${Choose}" == y ]];then
-		TIME && echo -e "开始安装[wget],请耐心等待...\n"
-		opkg update > /dev/null 2>&1
-		opkg install wget
-	else
-		TIME && echo "用户已取消安装,即将退出更新脚本..."
-		sleep 2
-		exit
-	fi
-fi
+Install_Pkg wget
 if [[ -z "${CURRENT_Version}" ]];then
 	TIME && echo "警告: 当前固件版本获取失败!"
 	CURRENT_Version="未知"
@@ -198,13 +208,17 @@ fi
 TIME && echo "正在检查版本更新..."
 [ ! -f /tmp/Github_Tags ] && touch /tmp/Github_Tags
 wget -q ${Github_Tags} -O - > /tmp/Github_Tags
+if [[ ! "$?" == 0 ]];then
+	TIME && echo "检查更新失败,请稍后重试!"
+	exit
+fi
 if [[ ${Stable_Mode} == 1 ]];then
 	GET_Version_Type="-Stable"
 else
 	GET_Version_Type=""
 fi
-GET_FullVersion=$(cat /tmp/Github_Tags | egrep -o "AutoBuild-${CURRENT_Device}-R[0-9]+.[0-9]+.[0-9]+.[0-9]+${GET_Version_Type}" | awk 'END {print}')
-GET_Version="${GET_FullVersion#*${CURRENT_Device}-}"
+GET_FullVersion=$(cat /tmp/Github_Tags | egrep -o "AutoBuild-${CURRENT_Device}-R[0-9].+-[0-9]+${GET_Version_Type}{Firmware_SFX}" | awk 'END {print}')
+GET_Version=$(echo ${GET_FullVersion} | egrep -o "R[0-9].+-[0-9]+")
 if [[ -z "${GET_FullVersion}" ]] || [[ -z "${GET_Version}" ]];then
 	TIME && echo "检查更新失败,请稍后重试!"
 	exit
@@ -214,6 +228,7 @@ echo "设备名称: ${DEFAULT_Device}"
 echo "固件格式: ${Firmware_SFX}"
 echo -e "\n当前固件版本: ${CURRENT_Version}"
 echo "云端固件版本: ${GET_Version}"
+[[ -z "${Firmware_Type}" ]] && TIME && echo "[固件格式] 获取失败!" && exit
 Check_Stable_Version=$(echo ${GET_Version} | egrep -o "R[0-9]+.[0-9]+.[0-9]+.[0-9]+")
 if [[ ! ${Force_Update} == 1 ]];then
 	if [[ "${CURRENT_Version}" == "${Check_Stable_Version}" ]];then
@@ -236,7 +251,7 @@ echo "固件下载地址: ${Github_Download}"
 cd ${Download_Path}/Downloads
 echo "固件保存位置: ${Download_Path}/Downloads"
 TIME && echo "正在下载固件,请耐心等待..."
-wget "${Github_Download}/${Firmware}" -O ${Firmware}
+wget -q "${Github_Download}/${Firmware}" -O ${Firmware}
 if [[ ! "$?" == 0 ]];then
 	TIME && echo "固件下载失败,请检查网络后重试!"
 	exit
@@ -264,23 +279,7 @@ else
 fi
 if [[ ${Compressed_x86} == "1" ]];then
 	TIME && echo "检测到固件为 [.gz] 压缩格式,开始解压固件..."
-	grep "gzip" /tmp/Package_list > /dev/null 2>&1
-	if [[ $? -ne 0 ]];then
-		if [[ "${Force_Update}" == "1" ]] || [[ "${AutoUpdate_Mode}" == "1" ]];then
-			Choose="Y"
-		else
-			TIME && read -p "未安装[gzip],是否执行安装?[Y/n]:" Choose
-		fi
-		if [[ "${Choose}" == Y ]] || [[ "${Choose}" == y ]];then
-			TIME && echo -e "开始安装[gzip],请耐心等待...\n"
-			opkg update > /dev/null 2>&1
-			opkg install gzip
-		else
-			TIME && echo "用户已取消安装,即将退出更新脚本..."
-			sleep 2
-			exit
-		fi
-	fi
+	Install_Pkg gzip
 	Firmware="${Firmware_Info}${BOOT_Type}.img"
 	rm -f ${Firmware} > /dev/null 2>&1
 	gzip -dk ${Firmware} > /dev/null 2>&1
@@ -292,9 +291,9 @@ if [[ ${Compressed_x86} == "1" ]];then
 	fi
 fi
 TIME && echo -e "开始更新固件,请耐心等待路由器重启...\n"
-sleep 30
+sleep 3
 sysupgrade ${Upgrade_Options} ${Firmware}
 if [[ $? -ne 0 ]];then
-	TIME && echo "固件刷写失败,请尝试不保留配置[-n]更新!"
+	TIME && echo "固件刷写失败,请尝试不保留配置[-n]或手动下载固件!"
 	exit
 fi

@@ -29,17 +29,9 @@ Diy-Part1() {
 	else
 		Replace_File Customize/system_common package/base-files/files/etc/config system
 	fi
-	Replace_File Customize/banner package/base-files/files/etc
 	
 	Update_Makefile exfat package/kernel/exfat
 
-	# Replace_File Customize/mt76-20210127.mk package/kernel/mt76 Makefile
-	# rm -rf package/kernel/mt76/patches
-
-	# ExtraPackages svn network/services dnsmasq https://github.com/openwrt/openwrt/trunk/package/network/services
-	# ExtraPackages svn network/services dropbear https://github.com/openwrt/openwrt/trunk/package/network/services
-	# ExtraPackages svn network/services ppp https://github.com/openwrt/openwrt/trunk/package/network/services
-	# ExtraPackages svn network/services hostapd https://github.com/openwrt/openwrt/trunk/package/network/services
 	# ExtraPackages svn kernel mt76 https://github.com/openwrt/openwrt/trunk/package/kernel
 	
 	rm -rf package/lean/luci-theme-argon
@@ -72,7 +64,6 @@ Diy-Part2() {
 	sed -i 's/192.168.1.1/192.168.3.1/g' package/base-files/files/bin/config_generate
 	sed -i 's/bootstrap/argon/g' feeds/luci/modules/luci-base/root/etc/config/luci
 
-	Replace_File Customize/mwan3.config package/feeds/packages/mwan3/files/etc/config mwan3
 }
 
 Diy-Part3() {

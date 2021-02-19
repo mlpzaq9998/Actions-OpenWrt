@@ -18,6 +18,19 @@ GET_TARGET_INFO() {
 		TARGET_PROFILE="$(egrep -o "CONFIG_TARGET.*DEVICE.*=y" .config | sed -r 's/.*DEVICE_(.*)=y/\1/')"
 	fi
 	[[ -z "${TARGET_PROFILE}" ]] && TARGET_PROFILE="${Default_Device}"
+	case "${TARGET_PROFILE}" in
+	x86_64)
+		grep "CONFIG_TARGET_IMAGES_GZIP=y" ${Home}/.config
+		if [[ ! $? -ne 0 ]];then
+			Firmware_sfx="img.gz"
+		else
+			Firmware_sfx="img"
+		fi
+	;;
+	*)
+		Firmware_sfx="bin"
+	;;
+	esac
 	TARGET_BOARD="$(awk -F '[="]+' '/TARGET_BOARD/{print $2}' .config)"
 	TARGET_SUBTARGET="$(awk -F '[="]+' '/TARGET_SUBTARGET/{print $2}' .config)"
 	Github_Repo="$(grep "https://github.com/[a-zA-Z0-9]" ${GITHUB_WORKSPACE}/.git/config | cut -c8-100)"
@@ -91,6 +104,9 @@ Diy_Part2_Base() {
 	echo "${Openwrt_Version}" > ${AutoBuild_Info}
 	echo "${Github_Repo}" >> ${AutoBuild_Info}
 	echo "${TARGET_PROFILE}" >> ${AutoBuild_Info}
+	echo "Firmware Type: ${Firmware_sfx}"
+	echo "Writting Type: ${Firmware_sfx} to ${AutoBuild_Info} ..."
+	echo "${Firmware_sfx}" >> ${AutoBuild_Info}
 	
 }
 
@@ -102,35 +118,28 @@ Diy_Part3_Base() {
 	case "${TARGET_PROFILE}" in
 	x86_64)
 		cd ${Firmware_Path}
-		Firmware=openwrt-${TARGET_BOARD}-${TARGET_SUBTARGET}-generic-squashfs-combined
+		Legacy_Firmware=openwrt-${TARGET_BOARD}-${TARGET_SUBTARGET}-generic-squashfs-combined.${Firmware_sfx}
+		EFI_Firmware=openwrt-${TARGET_BOARD}-${TARGET_SUBTARGET}-generic-squashfs-combined-efi.${Firmware_sfx}
 		AutoBuild_Firmware="AutoBuild-${TARGET_PROFILE}-${Openwrt_Version}"
-		grep "CONFIG_TARGET_IMAGES_GZIP=y" ${Home}/.config
-		if [[ ! $? -ne 0 ]];then
-			Firmware_sfx="img.gz"
-		else
-			Firmware_sfx="img"
-		fi
-		echo "Firmware Type: ${Firmware_sfx}"
-		if [ -f "${Firmware}${Firmware_sfx}" ];then
-			_MD5=$(md5sum ${Firmware}${Firmware_sfx} | cut -d ' ' -f1)
-			_SHA256=$(sha256sum ${Firmware}${Firmware_sfx} | cut -d ' ' -f1)
+		if [ -f "${Legacy_Firmware}" ];then
+			_MD5=$(md5sum ${Legacy_Firmware} | cut -d ' ' -f1)
+			_SHA256=$(sha256sum ${Legacy_Firmware} | cut -d ' ' -f1)
 			touch ${Home}/bin/Firmware/${AutoBuild_Firmware}.detail
 			echo -e "\nMD5:${_MD5}\nSHA256:${_SHA256}" > ${Home}/bin/Firmware/${AutoBuild_Firmware}-Legacy.detail
-			mv -f ${Firmware}.${Firmware_sfx} ${Home}/bin/Firmware/${AutoBuild_Firmware}-Legacy${Firmware_sfx}
+			mv -f ${Legacy_Firmware} ${Home}/bin/Firmware/${AutoBuild_Firmware}-Legacy${Firmware_sfx}
 			echo "Legacy Firmware is detected !"
 		fi
-		if [ -f "${Firmware}-efi${Firmware_sfx}" ];then
-			_MD5=$(md5sum ${Firmware}-efi${Firmware_sfx} | cut -d ' ' -f1)
-			_SHA256=$(sha256sum ${Firmware}-efi${Firmware_sfx} | cut -d ' ' -f1)
-			touch ${Home}/bin/Firmware/${AutoBuild_Firmware}.detail
+		if [ -f "${EFI_Firmware}" ];then
+			_MD5=$(md5sum ${EFI_Firmware} | cut -d ' ' -f1)
+			_SHA256=$(sha256sum ${EFI_Firmware} | cut -d ' ' -f1)
+			touch ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI.detail
 			echo -e "\nMD5:${_MD5}\nSHA256:${_SHA256}" > ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI.detail
-			cp ${Firmware}-efi.${Firmware_sfx} ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI${Firmware_sfx}
+			cp ${EFI_Firmware} ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI${Firmware_sfx}
 			echo "UEFI Firmware is detected !"
 		fi
 	;;
 	*)
 		cd ${Home}
-		Firmware_sfx="img"
 		Default_Firmware="openwrt-${TARGET_BOARD}-${TARGET_SUBTARGET}-${TARGET_PROFILE}-squashfs-sysupgrade.${Firmware_sfx}"
 		AutoBuild_Firmware="AutoBuild-${TARGET_PROFILE}-${Openwrt_Version}.${Firmware_sfx}"
 		AutoBuild_Detail="AutoBuild-${TARGET_PROFILE}-${Openwrt_Version}.detail"
@@ -141,9 +150,8 @@ Diy_Part3_Base() {
 		echo -e "\nMD5:${_MD5}\nSHA256:${_SHA256}" > bin/Firmware/${AutoBuild_Detail}
 	;;
 	esac
-	echo "Writting Type: ${Firmware_sfx} to ${AutoBuild_Info} ..."
-	echo "${Firmware_sfx}" >> ${AutoBuild_Info}
 	cd ${Home}
+	echo "Actions Avaliable: $(df -h | grep "/dev/root" | awk '{printf $4}')"
 }
 
 Mkdir() {
