@@ -23,7 +23,6 @@ Diy_Core() {
 Diy-Part1() {
 	Diy_Part1_Base
 	
-	Replace_File Customize/mac80211.sh package/kernel/mac80211/files/lib/wifi
 	if [ "${Default_Device}" == "d-team_newifi-d2" ];then
 		Replace_File Customize/system_newifi-d2 package/base-files/files/etc/config system
 	else
