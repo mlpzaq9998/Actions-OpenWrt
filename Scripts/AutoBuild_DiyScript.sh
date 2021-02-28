@@ -40,10 +40,10 @@ Diy-Part1() {
 	ExtraPackages svn other filebrowser https://github.com/immortalwrt/immortalwrt/trunk/package/ctcgfw
 	ExtraPackages svn lean luci-app-eqos https://github.com/immortalwrt/immortalwrt/trunk/package/ntlf9t
 	
-	ExtraPackages svn lean luci-app-qbittorrent https://github.com/immortalwrt/immortalwrt/trunk/package/lean
-	ExtraPackages svn lean libtorrent-rasterbar https://github.com/immortalwrt/packages/trunk/libs
-	rm -rf package/lean/qBittorrent
-	ExtraPackages svn lean qBittorrent-Enhanced-Edition https://github.com/garypang13/openwrt-static-qb/trunk
+	# ExtraPackages svn lean luci-app-qbittorrent https://github.com/immortalwrt/immortalwrt/trunk/package/lean
+	# ExtraPackages svn lean libtorrent-rasterbar https://github.com/immortalwrt/packages/trunk/libs
+	# rm -rf package/lean/qBittorrent
+	# ExtraPackages svn lean qBittorrent-Enhanced-Edition https://github.com/garypang13/openwrt-static-qb/trunk
 	
 	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-dockerman ./package/lean/luci-app-dockerman
 	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
