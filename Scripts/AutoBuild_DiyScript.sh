@@ -39,7 +39,8 @@ Diy-Part1() {
 	ExtraPackages svn other luci-app-filebrowser https://github.com/immortalwrt/immortalwrt/trunk/package/ctcgfw
 	ExtraPackages svn other filebrowser https://github.com/immortalwrt/immortalwrt/trunk/package/ctcgfw
 	ExtraPackages svn lean luci-app-eqos https://github.com/immortalwrt/immortalwrt/trunk/package/ntlf9t
-	
+	ExtraPackages svn other luci-app-mentohust https://github.com/immortalwrt/immortalwrt/trunk/package/ctcgfw
+	ExtraPackages svn other mentohust https://github.com/immortalwrt/immortalwrt/trunk/package/ctcgfw
 	# ExtraPackages svn lean luci-app-qbittorrent https://github.com/immortalwrt/immortalwrt/trunk/package/lean
 	# ExtraPackages svn lean libtorrent-rasterbar https://github.com/immortalwrt/packages/trunk/libs
 	# rm -rf package/lean/qBittorrent
@@ -61,7 +62,9 @@ Diy-Part2() {
 	# Modify default IP
 	sed -i 's/192.168.1.1/192.168.3.1/g' package/base-files/files/bin/config_generate
 	sed -i 's/bootstrap/argon/g' feeds/luci/modules/luci-base/root/etc/config/luci
+	
 	ExtraPackages svn other/../../feeds/packages/admin netdata https://github.com/openwrt/packages/trunk/admin
+	ExtraPackages svn other/../../feeds/packages/net zerotier https://github.com/openwrt/packages/trunk/net
 }
 
 Diy-Part3() {
