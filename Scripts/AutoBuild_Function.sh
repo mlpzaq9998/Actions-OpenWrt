@@ -20,7 +20,7 @@ GET_TARGET_INFO() {
 	[[ -z "${TARGET_PROFILE}" ]] && TARGET_PROFILE="${Default_Device}"
 	case "${TARGET_PROFILE}" in
 	x86_64)
-		grep "CONFIG_TARGET_IMAGES_GZIP=y" ${Home}/.config
+		grep "CONFIG_TARGET_IMAGES_GZIP=y" ${Home}/.config > /dev/null 2>&1
 		if [[ ! $? -ne 0 ]];then
 			Firmware_sfx="img.gz"
 		else
@@ -43,11 +43,12 @@ Diy_Part1_Base() {
 	Replace_File Customize/banner package/base-files/files/etc
 	if [[ "${INCLUDE_SSR_Plus}" == "true" ]];then
 		ExtraPackages git lean helloworld https://github.com/fw876 master
-		sed -i 's/143/143,25,5222/' package/lean/helloworld/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
+		#sed -i 's/143/143,25,5222,6969,1337,2710/' package/lean/helloworld/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
+		sed -i 's/143/143,8080/' package/lean/helloworld/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 	fi
 	if [[ "${INCLUDE_HelloWorld}" == "true" ]];then
 		ExtraPackages git lean luci-app-vssr https://github.com/jerrykuku master
-		ExtraPackages git lean lua-maxminddb https://github.com/jerrykuku master
+		ExtraPackages git other lua-maxminddb https://github.com/jerrykuku master
 		PKG_Finder d package xray-core
 		[[ -z "${PKG_RESULT}" ]] && ExtraPackages svn other xray-core https://github.com/fw876/helloworld/trunk
 	fi
@@ -63,18 +64,15 @@ Diy_Part1_Base() {
 		Replace_File Scripts/AutoBuild_Tools.sh package/base-files/files/bin
 	fi
 	if [[ "${INCLUDE_Passwall}" == "true" ]];then
-		ExtraPackages git lienol openwrt-passwall https://github.com/xiaorouji main
+		ExtraPackages git other openwrt-passwall https://github.com/xiaorouji main
 	fi
 	if [[ "${INCLUDE_mt7621_OC1000MHz}" == "true" ]];then
 		Replace_File Customize/102-mt7621-fix-cpu-clk-add-clkdev.patch target/linux/ramips/patches-5.4
 	fi
 	if [[ "${INCLUDE_OAF}" == "true" ]];then
-		echo "Warning: OpenAppFilter may conflict with FLowoffload/SFE !"
+		echo "Warning: OpenAppFilter may conflict with FLowoffload/SFE/Turbo ACC !"
 		ExtraPackages git other OpenAppFilter https://github.com/destan19
 	fi
-	Update_Makefile xray-core package/lean/helloworld/xray-core
-	Update_Makefile exfat package/kernel/exfat
-	# ExtraPackages svn kernel mt76 https://github.com/openwrt/openwrt/trunk/package/kernel
 }
 
 Diy_Part2_Base() {
@@ -83,6 +81,13 @@ Diy_Part2_Base() {
 	Replace_File Customize/uhttpd.po feeds/luci/applications/luci-app-uhttpd/po/zh-cn
 	Replace_File Customize/webadmin.po package/lean/luci-app-webadmin/po/zh-cn
 	Replace_File Customize/mwan3.config package/feeds/packages/mwan3/files/etc/config mwan3
+	if [[ "${INCLUDE_Argon}" == "true" ]];then
+		if [ -f "${Default_File}" ];then
+			ExtraPackages git lean luci-theme-argon https://github.com/jerrykuku 18.06
+		else
+			ExtraPackages git other luci-theme-argon https://github.com/jerrykuku
+		fi
+	fi
 	if [[ "${INCLUDE_DRM_I915}" == "true" ]];then
 		Replace_File Customize/config-5.4 target/linux/x86
 	fi
@@ -108,18 +113,17 @@ Diy_Part2_Base() {
 		sed -i "s?Openwrt?Openwrt ${Openwrt_Version}?g" package/base-files/files/etc/banner
 	fi
 	[[ -z "${Author}" ]] && Author="Unknown"
-	echo "Author: ${Author}"
-	echo "Openwrt Version: ${Openwrt_Version}"
-	echo "Router: ${TARGET_PROFILE}"
-	echo "Github: ${Github_Repo}"
 	[ -f "$Default_File" ] && sed -i "s?${Lede_Version}?${Lede_Version} Compiled by ${Author} [${Display_Date}]?g" $Default_File
 	echo "${Openwrt_Version}" > ${AutoBuild_Info}
 	echo "${Github_Repo}" >> ${AutoBuild_Info}
 	echo "${TARGET_PROFILE}" >> ${AutoBuild_Info}
-	echo "Firmware Type: ${Firmware_sfx}"
-	echo "Writting Type: ${Firmware_sfx} to ${AutoBuild_Info} ..."
 	echo "${Firmware_sfx}" >> ${AutoBuild_Info}
-	
+
+	echo "Author: ${Author}"
+	echo "Openwrt Version: ${Openwrt_Version}"
+	echo "Router: ${TARGET_PROFILE}"
+	echo "Github: ${Github_Repo}"
+	echo "Firmware Type: ${Firmware_sfx}"
 }
 
 Diy_Part3_Base() {
@@ -200,38 +204,23 @@ ExtraPackages() {
 		rm -rf package/${PKG_DIR}/${PKG_NAME}
 	fi
 	[ -d "${PKG_NAME}" ] && rm -rf ${PKG_NAME}
-	Retry_Times=3
-	while [ ! -f "${PKG_NAME}/Makefile" ]
-	do
-		echo "[$(date "+%H:%M:%S")] Checking out package [${PKG_NAME}] to package/${PKG_DIR} ..."
-		case "${PKG_PROTO}" in
-		git)
-		
-			if [[ -z "${REPO_BRANCH}" ]];then
-				REPO_BRANCH="master"
-			fi
-			git clone -b ${REPO_BRANCH} ${REPO_URL}/${PKG_NAME} ${PKG_NAME} > /dev/null 2>&1
-		;;
-		svn)
-			svn checkout ${REPO_URL}/${PKG_NAME} ${PKG_NAME} > /dev/null 2>&1
-		;;
-		*)
-			echo "[$(date "+%H:%M:%S")] Wrong option: ${PKG_PROTO} (Can only use git and svn),skip check out..."
-			break
-		;;
-		esac
-		if [ "$?" -eq 0 ] || [ -f ${PKG_NAME}/Makefile ] || [ -f ${PKG_NAME}/README* ] || [ ! "$(ls -A ${PKG_NAME})" = "" ];then
-			echo "[$(date "+%H:%M:%S")] Package [${PKG_NAME}] is detected!"
-			mv -f ${PKG_NAME} package/${PKG_DIR}
-			break
-		else
-			[ ${Retry_Times} -lt 1 ] && echo "[$(date "+%H:%M:%S")] Skip check out package [${PKG_NAME}] ..." && break
-			echo "[$(date "+%H:%M:%S")] [Error] [${Retry_Times}] Checkout failed,retry in 3s ..."
-			Retry_Times=$(($Retry_Times - 1))
-			rm -rf ${PKG_NAME}
-			sleep 3
-		fi
-	done
+	echo "[$(date "+%H:%M:%S")] Checking out package [${PKG_NAME}] to package/${PKG_DIR} ..."
+	case "${PKG_PROTO}" in
+	git)
+		[[ -z "${REPO_BRANCH}" ]] && REPO_BRANCH=master
+		git clone -b ${REPO_BRANCH} ${REPO_URL}/${PKG_NAME} ${PKG_NAME} > /dev/null 2>&1
+	;;
+	svn)
+		svn checkout ${REPO_URL}/${PKG_NAME} ${PKG_NAME} > /dev/null 2>&1
+	;;
+	*)
+		echo "[$(date "+%H:%M:%S")] Error option: ${PKG_PROTO} !" && return
+	;;
+	esac
+	if [ -f ${PKG_NAME}/Makefile ] || [ -f ${PKG_NAME}/README* ] || [ ! "$(ls -A ${PKG_NAME})" = "" ];then
+		echo "[$(date "+%H:%M:%S")] Package [${PKG_NAME}] is detected!"
+		mv -f ${PKG_NAME} package/${PKG_DIR}
+	fi
 	unset PKG_PROTO PKG_DIR PKG_NAME REPO_URL REPO_BRANCH
 }
 
@@ -240,10 +229,10 @@ Replace_File() {
 	PATCH_DIR=${GITHUB_WORKSPACE}/openwrt/${2}
 	FILE_RENAME=${3}
 	
-	Mkdir "${PATCH_DIR}"
+	Mkdir ${PATCH_DIR}
 	[ -f "${GITHUB_WORKSPACE}/${FILE_NAME}" ] && _TYPE1="f" && _TYPE2="File"
 	[ -d "${GITHUB_WORKSPACE}/${FILE_NAME}" ] && _TYPE1="d" && _TYPE2="Folder"
-	if [ -e "${GITHUB_WORKSPACE}/${FILE_NAME}" ];then
+	if [ -${_TYPE1} "${GITHUB_WORKSPACE}/${FILE_NAME}" ];then
 		[[ ! -z "${FILE_RENAME}" ]] && _RENAME="${FILE_RENAME}" || _RENAME=""
 		if [ -${_TYPE1} "${GITHUB_WORKSPACE}/${FILE_NAME}" ];then
 			echo "[$(date "+%H:%M:%S")] Moving [${_TYPE2}] ${FILE_NAME} to ${2}/${FILE_RENAME} ..."
@@ -252,7 +241,7 @@ Replace_File() {
 			echo "[$(date "+%H:%M:%S")] Customize ${_TYPE2} [${FILE_NAME}] is not detected,skip move ..."
 		fi
 	fi
-	unset FILE_NAME PATCH_DIR FILE_RENAME _RENAME _TYPE1 _TYPE2
+	unset FILE_NAME PATCH_DIR FILE_RENAME
 }
 
 Update_Makefile() {
