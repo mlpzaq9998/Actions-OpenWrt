@@ -39,5 +39,8 @@ Firmware-Diy() {
 	chmod -R 755 ./package/lean/luci-app-koolproxyR
 	chmod -R 755 ./package/lean/koolproxy
 	chmod -R 755 ./package/lean/luci-app-dockerman
+	
+	sed -i 's/192.168.1.1/192.168.3.1/g' package/base-files/files/bin/config_generate
+	sed -i 's/bootstrap/argon/g' feeds/luci/modules/luci-base/root/etc/config/luci
 }
 
