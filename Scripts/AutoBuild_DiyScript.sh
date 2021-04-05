@@ -28,7 +28,6 @@ Firmware-Diy() {
 	;;
 	esac		
 		
-	rm -rf package/lean/luci-theme-argon
 	rm -rf package/lean/luci-app-wrtbwmon
 
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-dockerman ./package/lean/luci-app-dockerman
