@@ -31,11 +31,11 @@ Firmware-Diy() {
 	rm -rf package/lean/luci-theme-argon
 	rm -rf package/lean/luci-app-wrtbwmon
 
-	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-dockerman ./package/lean/luci-app-dockerman
-	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
-	cp -r -f $GITHUB_WORKSPACE/Customize/wrtbwmon ./package/lean/wrtbwmon
-	cp -r -f $GITHUB_WORKSPACE/Customize/luci-app-koolproxyR ./package/lean/luci-app-koolproxyR
-	cp -r -f $GITHUB_WORKSPACE/Customize/koolproxy ./package/lean/koolproxy
+	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-dockerman ./package/lean/luci-app-dockerman
+	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
+	cp -r -f $GITHUB_WORKSPACE/CustomFiles/wrtbwmon ./package/lean/wrtbwmon
+	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-koolproxyR ./package/lean/luci-app-koolproxyR
+	cp -r -f $GITHUB_WORKSPACE/CustomFiles/koolproxy ./package/lean/koolproxy
 	chmod -R 755 ./package/lean/luci-app-koolproxyR
 	chmod -R 755 ./package/lean/koolproxy
 	chmod -R 755 ./package/lean/luci-app-dockerman
