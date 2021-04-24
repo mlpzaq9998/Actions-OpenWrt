@@ -69,7 +69,7 @@ jobs:
           /etc/php
         sudo -E apt-get -y autoremove --purge
         sudo -E apt-get clean
-
+      
     - name: Clone source code
       run: |
         git clone -b $REPO_BRANCH $REPO_URL openwrt
@@ -88,7 +88,7 @@ jobs:
         ln -s /mnt/openwrt/feeds openwrt/feeds
         ln -s /mnt/openwrt/staging_dir openwrt/staging_dir
         df -h
-
+	
         cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
@@ -125,7 +125,6 @@ jobs:
         cd openwrt
         source $GITHUB_WORKSPACE/$DIY_SCRIPT
         source $GITHUB_WORKSPACE/$FUNCTION_SCRIPT && PS_Firmware
-        df -h
 
     - name: Upload Firmware to Artifacts
       uses: actions/upload-artifact@main
