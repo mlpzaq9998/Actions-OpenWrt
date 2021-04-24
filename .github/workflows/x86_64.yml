@@ -78,15 +78,6 @@ jobs:
             echo "未检测到该设备的 $CONFIG_FILE 配置文件!"
             exit 1
         }
-        sudo mkdir -p -m 777 /mnt/openwrt/bin /mnt/openwrt/build_dir/host /mnt/openwrt/build_dir/hostpkg /mnt/openwrt/dl /mnt/openwrt/feeds /mnt/openwrt/staging_dir
-        mkdir -p openwrt/build_dir
-        ln -s /mnt/openwrt/bin openwrt/bin
-        ln -s -f /mnt/openwrt/build_dir/host openwrt/build_dir/host
-        ln -s -f /mnt/openwrt/build_dir/hostpkg openwrt/build_dir/hostpkg
-        ln -s /mnt/openwrt/dl openwrt/dl
-        ln -s /mnt/openwrt/feeds openwrt/feeds
-        ln -s /mnt/openwrt/staging_dir openwrt/staging_dir
-        df -h
         cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
