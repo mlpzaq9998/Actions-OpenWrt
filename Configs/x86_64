@@ -44,8 +44,8 @@ CONFIG_TARGET_ROOTFS_PARTSIZE=384
 CONFIG_TARGET_IMAGES_GZIP=y
 
 CONFIG_PACKAGE_kmod-rtl8812au-ct=y
-CONFIG_PACKAGE_kmod-rtl8821ae=y
 CONFIG_PACKAGE_kmod-mt76x2u=y
+CONFIG_PACKAGE_kmod-rtl8xxxu=y
 
 CONFIG_PACKAGE_kmod-fs-nfs-v3=y
 CONFIG_PACKAGE_kmod-fs-nfs-v4=y
@@ -85,14 +85,12 @@ CONFIG_PACKAGE_luci-app-hd-idle=n
 CONFIG_PACKAGE_luci-app-mwan3=n
 CONFIG_PACKAGE_luci-app-netdata=n
 CONFIG_PACKAGE_luci-app-nfs=n
-CONFIG_PACKAGE_luci-app-NetSpeedTest=y
 CONFIG_PACKAGE_luci-app-onliner=n
 CONFIG_PACKAGE_luci-app-openvpn=n
 # CONFIG_PACKAGE_luci-app-rclone is not set
 # CONFIG_PACKAGE_luci-app-rclone_INCLUDE_fuse-utils is not set
 # CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng is not set
 # CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui is not set
-CONFIG_PACKAGE_luci-app-rebootschedule=y
 CONFIG_PACKAGE_luci-app-serverchan=y
 # CONFIG_PACKAGE_luci-app-sfe is not set
 CONFIG_PACKAGE_luci-app-smartdns=n
@@ -162,6 +160,7 @@ CONFIG_PACKAGE_ppp-mod-pptp=y
 CONFIG_PACKAGE_tcpping=y
 CONFIG_PACKAGE_unzip=y
 CONFIG_PACKAGE_usbutils=y
+CONFIG_PACKAGE_usb-modeswitch=y
 CONFIG_PACKAGE_wget=y
 CONFIG_PACKAGE_xz=y
 CONFIG_PACKAGE_xz-utils=y
