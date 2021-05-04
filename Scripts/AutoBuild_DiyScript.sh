@@ -29,6 +29,8 @@ Firmware-Diy() {
 	esac
 	
 	rm -rf package/lean/luci-app-wrtbwmon
+	rm -rf feeds/packages/libs/libcups
+	rm -rf feeds/packages/libs/hplip
 	rm -rf package/feeds/packages/libcups
 	rm -rf package/feeds/packages/hplip
 
