@@ -6,11 +6,15 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=LuCI Support for cupsd
-LUCI_DEPENDS:=+luci-compat +kmod-usb-printer +kmod-usb-storage \
-+cups-bjnp +cups-bsd +cups-client +cups-filters +cups-ppdc
-LUCI_PKGARCH:=all
+PKG_NAME:=luci-app-cupsd
 PKG_VERSION:=1.3
+
+define Package/$(PKG_NAME)
+LUCI_TITLE:=LuCI Support for cupsd
+LUCI_PKGARCH:=all
+LUCI_DEPENDS:=+luci-compat +kmod-usb-printer +kmod-usb-storage \
++cups +cups-bjnp +cups-bsd +cups-client +cups-filters +cups-ppdc
+endef
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
