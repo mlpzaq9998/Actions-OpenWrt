@@ -29,12 +29,11 @@ Firmware-Diy() {
 	esac
 	
 	rm -rf package/lean/luci-app-wrtbwmon
-	rm -rf package/feeds/packages/libcups
+	rm -rf package/feeds/packages/hplip
 
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-cupsd ./package/lean/luci-app-cupsd
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/cups ./package/lean/cups
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/cups-bjnp ./package/lean/cups-bjnp
-	cp -r -f $GITHUB_WORKSPACE/CustomFiles/libcups ./package/feeds/packages/libcups
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-dockerman ./package/lean/luci-app-dockerman
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-wrtbwmon ./package/lean/luci-app-wrtbwmon
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/wrtbwmon ./package/lean/wrtbwmon
@@ -46,5 +45,4 @@ Firmware-Diy() {
 	chmod -R 755 ./package/lean/luci-app-cupsd
 	chmod -R 755 ./package/lean/cups
 	chmod -R 755 ./package/lean/cups-bjnp
-	chmod -R 755 ./package/feeds/packages/libcups
 }
