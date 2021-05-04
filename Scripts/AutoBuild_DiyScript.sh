@@ -28,11 +28,11 @@ Firmware-Diy() {
 	;;
 	esac
 	
-	rm -rf package/lean/luci-app-wrtbwmon
-	rm -rf feeds/packages/libs/libcups
-	rm -rf feeds/packages/libs/hplip
-	rm -rf package/feeds/packages/libcups
-	rm -rf package/feeds/packages/hplip
+	rm -rf ./package/lean/luci-app-wrtbwmon
+	rm -rf ./feeds/packages/libs/libcups
+	rm -rf ./feeds/packages/libs/hplip
+	rm -rf ./package/feeds/packages/libcups
+	rm -rf ./package/feeds/packages/hplip
 
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/luci-app-cupsd ./package/lean/luci-app-cupsd
 	cp -r -f $GITHUB_WORKSPACE/CustomFiles/cups ./package/lean/cups
