@@ -29,7 +29,7 @@ define Package/cups
 $(call Package/cups/Default)
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libcups +libcupsmime +libcupscgi +libcupsppdc +libusb-1.0
+  DEPENDS:=+libcups +libusb-1.0 +libstdcpp
   TITLE:=Common UNIX Printing System (daemon)
 endef
 
@@ -59,7 +59,7 @@ define Package/cups-client
 $(call Package/cups/Default)
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libcups +libcupsimage +libcupsmime
+  DEPENDS:=+libcups +libcupsimage
   TITLE:=Common UNIX Printing System - Client commands
 endef
 
@@ -87,7 +87,7 @@ define Package/cups-ppdc
 $(call Package/cups/Default)
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libcupsppdc
+  DEPENDS:=+libcups +zlib +libpthread +libpng +libjpeg +libstdcpp
   TITLE:=Common UNIX Printing System - PPDC utils
 endef
 
@@ -107,18 +107,6 @@ define Package/libcups/description
 	Common UNIX Printing System - Core library
 endef
 
-define Package/libcupscgi
-$(call Package/cups/Default)
-  SECTION:=libs
-  CATEGORY:=Libraries
-  DEPENDS:=+libcups
-  TITLE:=Common UNIX Printing System - CGI library
-endef
-
-define Package/libcupscgi/description
-	Common UNIX Printing System - CGI library
-endef
-
 define Package/libcupsimage
 $(call Package/cups/Default)
   SECTION:=libs
@@ -129,30 +117,6 @@ endef
 
 define Package/libcupsimage/description
 	Common UNIX Printing System - Image library
-endef
-
-define Package/libcupsmime
-$(call Package/cups/Default)
-  SECTION:=libs
-  CATEGORY:=Libraries
-  DEPENDS:=+libcups
-  TITLE:=Common UNIX Printing System - MIME library
-endef
-
-define Package/libcupsmime/description
-	Common UNIX Printing System - MIME library
-endef
-
-define Package/libcupsppdc
-$(call Package/cups/Default)
-  SECTION:=libs
-  CATEGORY:=Libraries
-  DEPENDS:=+libcups +libstdcpp
-  TITLE:=Common UNIX Printing System - PPDC library
-endef
-
-define Package/libcupsppdc/description
-	Common UNIX Printing System - PPDC library
 endef
 
 define Build/Configure
@@ -208,10 +172,6 @@ define Package/cups/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/daemon $(1)/usr/lib/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/driver $(1)/usr/lib/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/monitor $(1)/usr/lib/cups
-	$(INSTALL_DIR) $(1)/usr/lib/cups/filter
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/filter/{commandtops,pstops} \
-		$(PKG_INSTALL_DIR)/usr/lib/cups/filter/gziptoany \
-		$(1)/usr/lib/cups/filter
 	$(INSTALL_DIR) $(1)/usr/share/cups/templates
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/templates/*.tmpl \
 		$(1)/usr/share/cups/templates/
@@ -250,15 +210,18 @@ endef
 define Package/cups-client/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) \
-		$(PKG_INSTALL_DIR)/usr/bin/{lp,cancel,cupstestppd,cupstestdsc} \
+		$(PKG_INSTALL_DIR)/usr/bin/{lp,cancel,cupstestppd} \
 		$(PKG_INSTALL_DIR)/usr/bin/{ipptool,lpoptions,lpstat} \
 		$(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) \
-		$(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,cupsaddsmb,cupsfilter} \
+		$(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,cupsfilter} \
 		$(PKG_INSTALL_DIR)/usr/sbin/{lpadmin,lpinfo,lpmove} \
 		$(1)/usr/sbin/
 	(cd $(1)/usr/sbin; ln -sf cupsaccept accept; ln -sf cupsaccept cupsenable; ln -sf cupsaccept cupsdisable; ln -sf cupsaccept reject; ln -sf cupsaccept cupsreject;)
+	$(INSTALL_DIR) $(1)/usr/share/cups/ipptool
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/ipptool/* \
+		$(1)/usr/share/cups/ipptool
 endef
 
 define Package/cups-filters/install
@@ -280,24 +243,9 @@ define Package/libcups/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
 endef
 
-define Package/libcupscgi/install
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcupscgi.so* $(1)/usr/lib/
-endef
-
 define Package/libcupsimage/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcupsimage.so* $(1)/usr/lib/
-endef
-
-define Package/libcupsmime/install
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcupsmime.so* $(1)/usr/lib/
-endef
-
-define Package/libcupsppdc/install
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcupsppdc.so* $(1)/usr/lib/
 endef
 
 define Build/InstallDev
@@ -311,10 +259,7 @@ endef
 
 $(eval $(call BuildPackage,cups))
 $(eval $(call BuildPackage,libcups))
-$(eval $(call BuildPackage,libcupscgi))
 $(eval $(call BuildPackage,libcupsimage))
-$(eval $(call BuildPackage,libcupsmime))
-$(eval $(call BuildPackage,libcupsppdc))
 $(eval $(call BuildPackage,cups-bsd))
 $(eval $(call BuildPackage,cups-client))
 $(eval $(call BuildPackage,cups-filters))
