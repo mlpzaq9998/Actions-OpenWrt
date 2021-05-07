@@ -115,7 +115,6 @@ CONFIG_PACKAGE_cups-ppdc=y
 CONFIG_PACKAGE_avahi-autoipd=y
 CONFIG_PACKAGE_avahi-daemon-service-http=y
 CONFIG_PACKAGE_avahi-utils=y
-CONFIG_PACKAGE_hplip-common=n
 CONFIG_PACKAGE_luci-app-uugamebooster=y
 # CONFIG_PACKAGE_luci-app-v2ray-server is not set
 # CONFIG_PACKAGE_luci-app-xlnetacc is not set
