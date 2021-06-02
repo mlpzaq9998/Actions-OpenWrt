@@ -8,18 +8,20 @@ GET_TARGET_INFO() {
 	Home="${GITHUB_WORKSPACE}/openwrt"
 	[ -f "${GITHUB_WORKSPACE}/Openwrt.info" ] && . ${GITHUB_WORKSPACE}/Openwrt.info
 	[[ "${Short_Firmware_Date}" == true ]] && Compile_Date="$(echo ${Compile_Date} | cut -c1-8)"
-	Owner_Repo="$(grep "https://github.com/[a-zA-Z0-9]" ${GITHUB_WORKSPACE}/.git/config | cut -c8-100)"
-	Source_Repo="$(grep "https://github.com/[a-zA-Z0-9]" ${Home}/.git/config | cut -c8-100)"
-	Source_Owner="$(echo "${Source_Repo}" | egrep -o "[a-z]+" | awk 'NR==4')"
-	Current_Branch="$(git branch | sed 's/* //g')"
-	AB_Firmware_Info=package/base-files/files/etc/openwrt_info
+	User_Repo="$(grep "https://github.com/[a-zA-Z0-9]" ${GITHUB_WORKSPACE}/.git/config | cut -c8-100 | sed 's/^[ \t]*//g')"
+	[[ -z "${Author}" ]] && {
+		Author="$(echo "${User_Repo}" | egrep -o "[a-zA-Z0-9]+" | awk 'NR==4')"
+	}
+	Openwrt_Author="$(echo "${Openwrt_Repo}" | egrep -o "[a-zA-Z0-9]+" | awk 'NR==4')"
+	Current_Branch="$(GET_BRANCH)"
+	In_Firmware_Info=package/base-files/files/etc/openwrt_info
 	[[ ! ${Current_Branch} == master ]] && {
 		Current_Branch="$(echo ${Current_Branch} | egrep -o "[0-9]+.[0-9]+")"
 		Openwrt_Version_="R${Current_Branch}-"
 	} || {
-		Openwrt_Version_="R18.06-"
+		Openwrt_Version_="R$(date +%y.%m)-"
 	}
-	case ${Source_Owner} in
+	case ${Openwrt_Author} in
 	coolsnowwolf)
 		Version_File=package/lean/default-settings/files/zzz-default-settings
 		Old_Version="$(egrep -o "R[0-9]+\.[0-9]+\.[0-9]+" ${Version_File})"
@@ -64,27 +66,32 @@ GET_TARGET_INFO() {
 	esac
 	TARGET_SUBTARGET="$(awk -F '[="]+' '/TARGET_SUBTARGET/{print $2}' .config)"
 
-	echo "Firmware_Type=${Firmware_Type}" > ${Home}/TARGET_INFO
+	echo "Author=${Author}" > ${Home}/TARGET_INFO
+	echo "Default_Device=${Default_Device}" >> ${Home}/TARGET_INFO
+	echo "INCLUDE_Obsolete_PKG_Compatible=${INCLUDE_Obsolete_PKG_Compatible}" >> ${Home}/TARGET_INFO
+	echo "Upload_VM_Firmware=${Upload_VM_Firmware}" >> ${Home}/TARGET_INFO
+	echo "Firmware_Type=${Firmware_Type}" >> ${Home}/TARGET_INFO
 	echo "TARGET_PROFILE=${TARGET_PROFILE}" >> ${Home}/TARGET_INFO
 	echo "Openwrt_Version=${Openwrt_Version}" >> ${Home}/TARGET_INFO
-	echo "Source_Owner=${Source_Owner}" >> ${Home}/TARGET_INFO
+	echo "Openwrt_Author=${Openwrt_Author}" >> ${Home}/TARGET_INFO
 	echo "TARGET_BOARD=${TARGET_BOARD}" >> ${Home}/TARGET_INFO
 	echo "TARGET_SUBTARGET=${TARGET_SUBTARGET}" >> ${Home}/TARGET_INFO
 	echo "Home=${Home}" >> ${Home}/TARGET_INFO
 	echo "Current_Branch=${Current_Branch}" >> ${Home}/TARGET_INFO
-
-	echo "CURRENT_Version=${Openwrt_Version}" > ${AB_Firmware_Info}
-	echo "Github=${Owner_Repo}" >> ${AB_Firmware_Info}
-	echo "DEFAULT_Device=${TARGET_PROFILE}" >> ${AB_Firmware_Info}
-	echo "Firmware_Type=${Firmware_Type}" >> ${AB_Firmware_Info}
+	echo "Upload_VM_Firmware=${Upload_VM_Firmware}" >> ${Home}/TARGET_INFO
+	
+	echo "Github=${User_Repo}" > ${In_Firmware_Info}
+	echo "CURRENT_Version=${Openwrt_Version}" >> ${In_Firmware_Info}
+	echo "DEFAULT_Device=${TARGET_PROFILE}" >> ${In_Firmware_Info}
+	echo "Firmware_Type=${Firmware_Type}" >> ${In_Firmware_Info}
 
 	echo "Author: ${Author}"
-	echo "Author Github: ${Owner_Repo}"
+	echo "User Repo: ${User_Repo}"
 	echo "Firmware Version: ${Openwrt_Version}"
 	echo "Firmware Type: ${Firmware_Type}"
-	echo "Source: ${Source_Repo}"
-	echo "Source Author: ${Source_Owner}"
-	echo "Source Branch: ${Current_Branch}"
+	echo "Openwrt Repo: ${Openwrt_Repo}"
+	echo "Openwrt Author: ${Openwrt_Author}"
+	echo "Openwrt Branch: ${Current_Branch}"
 	echo "TARGET_PROFILE: ${TARGET_PROFILE}"
 	echo "TARGET_BOARD: ${TARGET_BOARD}"
 	echo "TARGET_SUBTARGET: ${TARGET_SUBTARGET}"
@@ -102,41 +109,52 @@ Firmware-Diy_Base() {
 		Replace_File Scripts/AutoBuild_Tools.sh package/base-files/files/bin
 	}
 	[[ "${INCLUDE_AutoUpdate}" == true ]] && {
-		AddPackage git lean luci-app-autoupdate https://github.com/Hyy2001X main
+		AddPackage git lean luci-app-autoupdate Hyy2001X main
 		Replace_File Scripts/AutoUpdate.sh package/base-files/files/bin
 	}
 	[[ "${INCLUDE_Theme_Argon}" == true ]] && {
-		case ${Source_Owner} in
+		case ${Openwrt_Author} in
 		coolsnowwolf)
-			AddPackage git lean luci-theme-argon https://github.com/jerrykuku 18.06
+			AddPackage git lean luci-theme-argon jerrykuku 18.06
 		;;
 		*)
 			case ${Current_Branch} in
 			19.07)
-				AddPackage git other luci-theme-argon https://github.com/jerrykuku v2.2.5
+				AddPackage git other luci-theme-argon jerrykuku v2.2.5
 			;;
 			21.02)
-				AddPackage git other luci-theme-argon https://github.com/jerrykuku
+				AddPackage git other luci-theme-argon jerrykuku master
 			;;
 			18.06)
-				AddPackage git other luci-theme-argon https://github.com/jerrykuku 18.06
+				AddPackage git other luci-theme-argon jerrykuku 18.06
 			;;
 			*)
-				TIME "[ERROR] Unknown source branch: [${Current_Branch}] !"
+				TIME "[ERROR] Unknown Openwrt branch: [${Current_Branch}] !"
 			;;
 			esac
 		;;
 		esac
-	}	
-	[[ -n "${Default_IP_Address}" ]] && {
-		if [[ "${Default_IP_Address}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]];then
+	}
+	New_IP_Address="${Default_IP_Address}"
+	if [[ -n "${Defined_IP_Address}" ]];then
+		TIME "Using defined IP Address [${Defined_IP_Address}] ..."
+		New_IP_Address="${Defined_IP_Address}"
+	fi
+	[[ -n "${New_IP_Address}" ]] && [[ "${New_IP_Address}" != false ]] && {
+		if [[ "${New_IP_Address}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]];then
 			Old_IP_Address=$(awk -F '[="]+' '/ipaddr:-/{print $3}' package/base-files/files/bin/config_generate | awk 'NR==1')
-			if [[ ! "${Default_IP_Address}" == "${Old_IP_Address}" ]];then
-				TIME "Setting default IP Address to ${Default_IP_Address} ..."
-				sed -i "s/${Old_IP_Address}/${Default_IP_Address}/g" package/base-files/files/bin/config_generate
+			if [[ ! "${New_IP_Address}" == "${Old_IP_Address}" ]];then
+				TIME "Setting default IP Address to ${New_IP_Address} ..."
+				sed -i "s/${Old_IP_Address}/${New_IP_Address}/g" package/base-files/files/bin/config_generate
+				a=$(echo ${Old_IP_Address} | egrep -o "[0-9]+.[0-9]+." | awk 'NR==1')
+				b=$(echo ${New_IP_Address} | egrep -o "[0-9]+.[0-9]+." | awk 'NR==1')
+				c="$(egrep -o ")).[0-9]+" package/base-files/files/bin/config_generate)"
+				d=")).$(echo ${New_IP_Address} | egrep -o "[0-9]+" | awk 'END {print}')"
+				sed -i "s/${a}/${b}/g" package/base-files/files/bin/config_generate
+				sed -i "s/${c}/${d}/g" package/base-files/files/bin/config_generate
 			fi
 		else
-			TIME "[ERROR] ${Default_IP_Address} is not an IP Address !"
+			TIME "[ERROR] ${New_IP_Address} is not an IP Address !"
 		fi
 	}
 	[ -f package/base-files/files/bin/AutoUpdate.sh ] && {
@@ -144,18 +162,17 @@ Firmware-Diy_Base() {
 	} || AutoUpdate_Version=OFF
 	Replace_File CustomFiles/Depends/profile package/base-files/files/etc
 	sed -i '/profile/d' package/base-files/files/lib/upgrade/keep.d/base-files-essential
-	case ${Source_Owner} in
+	case ${Openwrt_Author} in
 	coolsnowwolf)
 		Replace_File CustomFiles/Depends/coremark_lede.sh package/lean/coremark coremark.sh
 		Replace_File CustomFiles/Depends/cpuinfo_x86 package/lean/autocore/files/x86/sbin cpuinfo
-		AddPackage git other helloworld https://github.com/fw876 master
+		AddPackage git other helloworld fw876 master
 		sed -i 's/143/143,8080/' $(PKG_Finder d package luci-app-ssr-plus)/root/etc/init.d/shadowsocksr
 		sed -i "s?iptables?#iptables?g" ${Version_File}
 		sed -i "s?${Old_Version}?${Old_Version} Compiled by ${Author} [${Display_Date}]?g" ${Version_File}
 		[[ "${INCLUDE_DRM_I915}" == true ]] && Replace_File CustomFiles/Depends/i915-5.4 target/linux/x86 config-5.4
 	;;
 	immortalwrt)
-		sed -i 's/143/143,8080/' $(PKG_Finder d package luci-app-ssr-plus)/root/etc/init.d/shadowsocksr
 		Replace_File CustomFiles/Depends/coremark_ImmortalWrt.sh package/base-files/files/etc coremark.sh
 		Replace_File CustomFiles/Depends/ImmortalWrt package/base-files/files/etc openwrt_release
 		Replace_File CustomFiles/Depends/cpuinfo_x86 package/lean/autocore/files/x86/sbin cpuinfo
@@ -163,7 +180,7 @@ Firmware-Diy_Base() {
 		[[ "${INCLUDE_DRM_I915}" == true ]] && Replace_File CustomFiles/Depends/i915-4.19 target/linux/x86 config-4.19
 	;;
 	esac
-	case ${Source_Owner} in
+	case ${Openwrt_Author} in
 	immortalwrt)
 		Replace_File CustomFiles/Depends/banner package/lean/default-settings/files openwrt_banner
 		sed -i "s?By?By ${Author}?g" package/lean/default-settings/files/openwrt_banner
@@ -175,34 +192,56 @@ Firmware-Diy_Base() {
 		sed -i "s?Openwrt?Openwrt ${Openwrt_Version} / AutoUpdate ${AutoUpdate_Version}?g" package/base-files/files/etc/banner
 	;;
 	esac
-	[[ "${INCLUDE_Obsolete_PKG_Compatible}" == true ]] && {
+	TIME "[Firmware-Diy_Base] All done !"
+}
+
+Other_Scripts() {
+	[ -f TARGET_INFO ] && . TARGET_INFO || {
+		TIME "[ERROR] No variable_define file detected!"
+		exit 1
+	}
+	case ${INCLUDE_Obsolete_PKG_Compatible} in
+	19.07)
+		Current_Branch=19.07
+		Force_mode=1
+		INCLUDE_Obsolete_PKG_Compatible=true
+	;;
+	21.02)
+		Current_Branch=21.02
+		Force_mode=1
+		INCLUDE_Obsolete_PKG_Compatible=true
+	;;
+	esac
+	if [[ "${INCLUDE_Obsolete_PKG_Compatible}" == true ]];then
 		TIME "Start to run Obsolete_Package_Compatible Scripts ..."
-		[[ ${Source_Owner} == openwrt ]] && {
+		if [[ ${Openwrt_Author} == openwrt ]] || [[ "${Force_mode}" == 1 ]];then
 			case ${Current_Branch} in
 			19.07 | 21.02)
 				Replace_File CustomFiles/Patches/0003-upx-ucl-${Current_Branch}.patch ./
 				cat 0003-upx-ucl-${Current_Branch}.patch | patch -p1 > /dev/null 2>&1
-				AddPackage svn ../feeds/packages/lang golang https://github.com/coolsnowwolf/packages/trunk/lang
+				# AddPackage svn feeds/packages/lang golang coolsnowwolf/packages/trunk/lang
 				TIME "Start to convert zh-cn translation files to zh_Hans ..."
 				Replace_File Scripts/Convert_Translation.sh package
-				cd ./package
-				bash ./Convert_Translation.sh
-				cd ..
+				cd ./package && bash ./Convert_Translation.sh && cd ..
 			;;
 			*)
-				TIME "[ERROR] Current branch: [${Current_Branch}] is not supported !"
+				TIME "Current branch: [${Current_Branch}] is not supported,skip..."
 			;;
 			esac
-		} || {
-			TIME "[ERROR] Current source: [${Source_Owner}] is not supported !"
-		}
-	}
-	TIME "[Firmware-Diy_Base] All done !"
+		else
+			TIME "Current source: [${Openwrt_Author}] is not supported,skip..."
+		fi
+	fi
+	if [ -s $GITHUB_WORKSPACE/Configs/Common ];then
+		TIME "Merging Common_Config to .config ..."
+		echo -e "\n$(cat $GITHUB_WORKSPACE/Configs/Common)" >> .config
+		cat .config
+	fi
 }
 
 PS_Firmware() {
 	. TARGET_INFO
-	case ${Source_Owner} in
+	case ${Openwrt_Author} in
 	immortalwrt)
 		_Firmware=immortalwrt
 	;;
@@ -212,7 +251,7 @@ PS_Firmware() {
 	esac
 	case ${Current_Branch} in
 	19.07 | 18.06)
-		case ${Source_Owner} in
+		case ${Openwrt_Author} in
 		immortalwrt)
 			_Legacy_Firmware=combined-squashfs
 			_EFI_Firmware=uefi-gpt-squashfs
@@ -229,10 +268,12 @@ PS_Firmware() {
 	;;
 	esac
 	Firmware_Path="bin/targets/${TARGET_BOARD}/${TARGET_SUBTARGET}"
+	rm -rf ${Firmware_Path}/packages
 	Mkdir bin/Firmware
 	case "${TARGET_PROFILE}" in
 	x86_64)
 		cd ${Firmware_Path}
+		Default_Firmware="${_Firmware}-${TARGET_BOARD}-${TARGET_SUBTARGET}"
 		Legacy_Firmware="${_Firmware}-${TARGET_BOARD}-${TARGET_SUBTARGET}-${_Legacy_Firmware}.${Firmware_Type}"
 		EFI_Firmware="${_Firmware}-${TARGET_BOARD}-${TARGET_SUBTARGET}-${_EFI_Firmware}.${Firmware_Type}"
 		AutoBuild_Firmware="AutoBuild-${TARGET_PROFILE}-${Openwrt_Version}"
@@ -242,23 +283,31 @@ PS_Firmware() {
 		if [ -f "${Legacy_Firmware}" ];then
 			_MD5=$(md5sum ${Legacy_Firmware} | cut -d ' ' -f1)
 			_SHA256=$(sha256sum ${Legacy_Firmware} | cut -d ' ' -f1)
-			touch ${Home}/bin/Firmware/${AutoBuild_Firmware}.detail
-			echo -e "\nMD5:${_MD5}\nSHA256:${_SHA256}" > ${Home}/bin/Firmware/${AutoBuild_Firmware}-Legacy.detail
-			mv -f ${Legacy_Firmware} ${Home}/bin/Firmware/${AutoBuild_Firmware}-Legacy.${Firmware_Type}
+			echo -e "MD5:${_MD5}\nSHA256:${_SHA256}" > ${Home}/bin/Firmware/${AutoBuild_Firmware}-Legacy.detail
+			cp ${Legacy_Firmware} ${AutoBuild_Firmware}-Legacy.${Firmware_Type}
 			TIME "Legacy Firmware is detected !"
-		else
-			TIME "[ERROR] Legacy Firmware is not detected !"
 		fi
 		if [ -f "${EFI_Firmware}" ];then
 			_MD5=$(md5sum ${EFI_Firmware} | cut -d ' ' -f1)
 			_SHA256=$(sha256sum ${EFI_Firmware} | cut -d ' ' -f1)
-			touch ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI.detail
 			echo -e "\nMD5:${_MD5}\nSHA256:${_SHA256}" > ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI.detail
-			cp ${EFI_Firmware} ${Home}/bin/Firmware/${AutoBuild_Firmware}-UEFI.${Firmware_Type}
+			cp ${EFI_Firmware} ${AutoBuild_Firmware}-UEFI.${Firmware_Type}
 			TIME "UEFI Firmware is detected !"
-		else
-			TIME "[ERROR] UEFI Firmware is not detected !"
 		fi
+		if [[ "${Upload_VM_Firmware}" == true ]];then
+			TIME "Converting vmdk firmware to vhdx ..."
+			[ -f "${Default_Firmware}-${_Legacy_Firmware}.vmdk" ] && {
+				qemu-img convert -O vhdx ${Default_Firmware}-${_Legacy_Firmware}.vmdk ${AutoBuild_Firmware}-Legacy.vhdx
+				cp ${Default_Firmware}-${_Legacy_Firmware}.vmdk ${AutoBuild_Firmware}-Legacy.vmdk
+				cp ${Default_Firmware}-${_Legacy_Firmware}.vdi ${AutoBuild_Firmware}-Legacy.vdi
+			}
+			[ -f "${Default_Firmware}-${_UEFI_Firmware}.vmdk" ] && {
+				qemu-img convert -O vhdx ${Default_Firmware}-${_Legacy_Firmware}.vmdk ${AutoBuild_Firmware}-UEFI.vhdx
+				cp ${Default_Firmware}-${_UEFI_Firmware}.vmdk ${AutoBuild_Firmware}-UEFI.vmdk
+				cp ${Default_Firmware}-${_Legacy_Firmware}.vdi ${AutoBuild_Firmware}-Legacy.vdi
+			}
+		fi
+		mv -f AutoBuild-* ${Home}/bin/Firmware
 	;;
 	*)
 		cd ${Home}
@@ -280,6 +329,14 @@ PS_Firmware() {
 	esac
 	cd ${Home}
 	echo "[$(date "+%H:%M:%S")] Actions Avaliable: $(df -h | grep "/dev/root" | awk '{printf $4}')"
+}
+
+GET_BRANCH() {
+    local Folder="$(pwd)"
+    [ -n "$1" ] && Folder="$1"
+    git -C "${Folder}" rev-parse --abbrev-ref HEAD | grep -v HEAD || \
+    git -C "${Folder}" describe --exact-match HEAD || \
+    git -C "${Folder}" rev-parse HEAD
 }
 
 TIME() {
@@ -328,7 +385,7 @@ Auto_AddPackage_mod() {
 	}
 	_FILENAME=${1}
 	echo "" >> ${_FILENAME}
-	[ -f "${_FILENAME}" ] && {
+	[ -f "${_FILENAME}" ] && [ -s "${_FILENAME}" ] && {
 		TIME "Loading Custom Packages list: [${_FILENAME}]..."
 		cat ${_FILENAME} | sed '/^$/d' | while read X
 		do
@@ -349,7 +406,7 @@ AddPackage() {
 		PKG_PROTO=${1}
 		PKG_DIR=${2}
 		PKG_NAME=${3}
-		REPO_URL=${4}
+		REPO_URL="https://github.com/${4}"
 		REPO_BRANCH=${5}
 	;;
 	*)
