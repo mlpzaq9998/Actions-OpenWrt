@@ -20,7 +20,7 @@ Diy_Core() {
 
 Firmware-Diy() {
 	TIME "Starting run Firmware-Diy commands..."
-	AddPackage git other luci-app-adguardhome ZYL
+	AddPackage git other luci-app-adguardhome Hyy2001X
 
 	case ${TARGET_PROFILE} in
 	d-team_newifi-d2)
