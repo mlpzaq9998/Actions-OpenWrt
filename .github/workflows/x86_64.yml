@@ -13,10 +13,6 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-      ssh:
-        description: 'SSH 连接到 Actions'
-        required: true
-        default: 'false'
       ip_addr:
         description: '固件 IP 地址 [可选]'
         default: ''
@@ -34,8 +30,8 @@ on:
 
 ### 环境变量设置
 env:
-# 设备名称
-  DEFAULT_TARGET: x86_64
+# 编译时调用的 [.config] 文件名称
+  CONFIG_FILE: x86_64
 # 源码仓库:分支
   DEFAULT_SOURCE: coolsnowwolf/lede:master
 # 上传固件到 Github Releases
@@ -44,14 +40,14 @@ env:
   UPLOAD_ARTIFACTS: false
 # 上传 bin 文件夹到 Github Artifacts
   UPLOAD_BIN_ARTIFACTS: false
-# 删除无用文件以释放更多空间
+# 删除无用文件以增加编译空间
   DELETE_USELESS_FILES: true
 # 删除早期的 workflow 任务
   DELETE_OLD_WORKFLOW: true
 ### END
 
 jobs:
-  build:
+  Compile:
     runs-on: ubuntu-latest
 
     steps:
@@ -60,13 +56,13 @@ jobs:
 
     - name: Initialization Define Info
       run: |
-        DEFAULT_TARGET=${{ env.DEFAULT_TARGET }}
+        CONFIG_FILE=${{ env.CONFIG_FILE }}
         DEFAULT_SOURCE=${{ env.DEFAULT_SOURCE }}
         DELETE_USELESS_FILES=${{ env.DELETE_USELESS_FILES }}
-        echo "DEFAULT_TARGET=$DEFAULT_TARGET" >> $GITHUB_ENV
+        echo "CONFIG_FILE=$CONFIG_FILE" >> $GITHUB_ENV
         echo "DELETE_USELESS_FILES=$DELETE_USELESS_FILES" >> $GITHUB_ENV
-        [ ! -f "$GITHUB_WORKSPACE/Configs/$DEFAULT_TARGET" ] && {
-            echo "[ERROR] No target_config file: [$DEFAULT_TARGET] detected!"
+        [ ! -f "$GITHUB_WORKSPACE/Configs/$CONFIG_FILE" ] && {
+            echo "Config_File: [/Config/$CONFIG_FILE] is not detected!"
             exit 1
         }
         export REPO_URL="https://github.com/$(echo $DEFAULT_SOURCE | cut -d \: -f 1)"
@@ -74,19 +70,17 @@ jobs:
         [ -z $REPO_BRANCH ] && REPO_BRANCH=master
         echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
         echo "REPO_BRANCH=$REPO_BRANCH" >> $GITHUB_ENV
-        echo -e "TARGET_PROFILE: $DEFAULT_TARGET\nSOURCE: $REPO_URL:$REPO_BRANCH"
 
     - name: Initialization Environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo -E apt-get update
-        sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync qemu-utils
+        sudo -E apt-get -y install build-essential cmake asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libreadline-dev libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint ccache curl wget vim nano python2.7 python3 python3-pip python3-ply haveged lrzsz device-tree-compiler scons antlr3 gperf intltool mkisofs rsync
         sudo timedatectl set-timezone "Asia/Shanghai"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
         if [ "$DELETE_USELESS_FILES" == true ];then
-            echo "Deleting useless files,please wait ..."
             docker rmi $(docker images -q)
             sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php
             sudo -E apt-get -y autoremove --purge
@@ -94,8 +88,8 @@ jobs:
         fi
         echo "Compile_Date=$(date +%Y%m%d%H%M)" > $GITHUB_WORKSPACE/Openwrt.info
         echo "Display_Date=$(date +%Y/%m/%d)" >> $GITHUB_WORKSPACE/Openwrt.info
-        echo "Defined_IP_Address=${{ github.event.inputs.IP }}" >> $GITHUB_WORKSPACE/Openwrt.info
-        echo "Openwrt_Repo=$REPO_URL" >> $GITHUB_WORKSPACE/Openwrt.info
+        echo "Before_IP_Address=${{ github.event.inputs.IP }}" >> $GITHUB_WORKSPACE/Openwrt.info
+        echo "Openwrt_Repository=$REPO_URL" >> $GITHUB_WORKSPACE/Openwrt.info
         echo "Artifacts_Date=$(date +%m%d%H%M)" >> $GITHUB_ENV
         touch Release_info
       
@@ -110,20 +104,14 @@ jobs:
     - name: Run AutoBuild_DiyScript.sh
       run: |
         chmod +x Scripts/AutoBuild_*.sh
-        cp $GITHUB_WORKSPACE/Configs/$DEFAULT_TARGET openwrt/.config
+        cp $GITHUB_WORKSPACE/Configs/$CONFIG_FILE openwrt/.config
         cd openwrt
         make defconfig > /dev/null 2>&1
         source $GITHUB_WORKSPACE/Scripts/AutoBuild_DiyScript.sh
         source $GITHUB_WORKSPACE/Scripts/AutoBuild_Function.sh
-        Firmware-Diy_Base && Firmware-Diy
-        rm -f .config && cp $GITHUB_WORKSPACE/Configs/$DEFAULT_TARGET .config
-
-    - name: SSH Connection to Actions
-      uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.SSH == 'true' && github.event.inputs.SSH  != 'false') || contains(github.event.action, 'SSH')
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        Firmware-Diy_Base
+        source $GITHUB_WORKSPACE/openwrt/VARIABLE_FILE_Sec && Firmware-Diy
+        rm -f .config && cp $GITHUB_WORKSPACE/Configs/$CONFIG_FILE .config
 
     - name: Compile
       run: |
@@ -147,14 +135,14 @@ jobs:
       uses: actions/upload-artifact@main
       if: env.UPLOAD_ARTIFACTS == 'true' && env.Compile_Result == 'true' && !cancelled()
       with:
-        name: ${{ env.DEFAULT_TARGET }}_${{ env.REPO_BRANCH }}_firmware_${{ env.Artifacts_Date }}
+        name: ${{ env.REPO_BRANCH }}_firmware_${{ env.Artifacts_Date }}
         path: openwrt/bin/Firmware
 
     - name: Upload bin to Artifacts
       uses: actions/upload-artifact@main
       if: env.UPLOAD_BIN_ARTIFACTS == 'true' && env.Compile_Result == 'true' && !cancelled()
       with:
-        name: ${{ env.DEFAULT_TARGET }}_${{ env.REPO_BRANCH }}_bin_${{ env.Artifacts_Date }}
+        name: ${{ env.REPO_BRANCH }}_bin_${{ env.Artifacts_Date }}
         path: openwrt/bin
 
     - name: Upload Firmware to Github Releases
